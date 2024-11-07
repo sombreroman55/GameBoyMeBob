@@ -7,7 +7,7 @@
 namespace gameboymebob {
 class Mmu {
 public:
-    std::array<u8, 0x10000> memory;
+    std::array<u8, 0x10000> memory = {};
 
     Mmu();
     ~Mmu();

@@ -50,3 +50,34 @@ TEST_F(MemTest, CartCopyWorks)
         EXPECT_EQ(mem->memory[i], cart->rom_data[i]);
     }
 }
+
+TEST_F(MemTest, ReadWriteByte)
+{
+    mem->write_byte(0x1234, 0x43);
+    EXPECT_EQ(mem->read_byte(0x1234), 0x43);
+
+    mem->write_byte(0x1235, 0x21);
+    EXPECT_EQ(mem->read_byte(0x1235), 0x21);
+}
+
+TEST_F(MemTest, ReadWriteWord)
+{
+    mem->write_word(0x1234, 0x4321);
+    EXPECT_EQ(mem->read_word(0x1234), 0x4321);
+
+    mem->write_word(0x1110, 0x2112);
+    EXPECT_EQ(mem->read_word(0x1110), 0x2112);
+
+    mem->write_word(0x0008, 0x1357);
+    EXPECT_EQ(mem->read_word(0x0008), 0x1357);
+}
+
+TEST_F(MemTest, ByteWordMix)
+{
+    mem->write_byte(0x0000, 0x43);
+    EXPECT_EQ(mem->read_word(0x0000), 0x0043);
+
+    mem->write_word(0x1000, 0x4321);
+    EXPECT_EQ(mem->read_byte(0x1000), 0x21);
+    EXPECT_EQ(mem->read_byte(0x1001), 0x43);
+}
