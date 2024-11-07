@@ -31,5 +31,7 @@
 *.out
 *.app
 
+/.cache
+/build
 .clang-format
-compile-commands.json
+compile_commands.json
