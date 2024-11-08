@@ -17,8 +17,10 @@ find_package(spdlog REQUIRED)
 
 set(GBMB_SRCS
   # Core files
-  ${BASE_DIR}/src/mmu.cc
   ${BASE_DIR}/src/cartridge.cc
+  ${BASE_DIR}/src/cpu.cc
+  ${BASE_DIR}/src/mmu.cc
+  ${BASE_DIR}/src/registers.cc
   ${BASE_DIR}/src/serial.cc
 
   # Debug files
@@ -50,6 +52,7 @@ include(GoogleTest)
 
 set(TEST_SRCS
   ${BASE_DIR}/tests/mem_test.cc
+  ${BASE_DIR}/tests/cpu_test.cc
 )
 
 add_executable(${TEST_TARGET}
