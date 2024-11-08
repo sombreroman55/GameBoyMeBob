@@ -1,9 +1,34 @@
 #include "mmu.hh"
 #include "cartridge.hh"
+#include "serial.hh"
 
 namespace gameboymebob {
 Mmu::Mmu() { }
 Mmu::~Mmu() { }
+
+void Mmu::write_io_byte(u16 addr, u8 byte)
+{
+    switch (addr) {
+    case 0xFF01:
+        serial->load_transfer_byte(byte);
+        break;
+    case 0xFF02:
+        // For Blargg's unit tests
+        if (byte == 0x81) {
+            printf("%c", memory[0xFF01]);
+        }
+        break;
+    default:
+        // Nothing special, just write the byte
+        memory[addr] = byte;
+        break;
+    }
+}
+
+void Mmu::map_serial(SerialController* ser)
+{
+    serial = ser;
+}
 
 u8 Mmu::read_byte(u16 addr)
 {
@@ -12,11 +37,15 @@ u8 Mmu::read_byte(u16 addr)
 
 u16 Mmu::read_word(u16 addr)
 {
-    return (memory[addr+1] << 8) | memory[addr];
+    return (memory[addr + 1] << 8) | memory[addr];
 }
 
 void Mmu::write_byte(u16 addr, u8 byte)
 {
+    if (0xFF00 <= addr && addr <= 0xFF7F) {
+        write_io_byte(addr, byte);
+        return;
+    }
     memory[addr] = byte;
 }
 

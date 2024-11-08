@@ -19,6 +19,7 @@ set(GBMB_SRCS
   # Core files
   ${BASE_DIR}/src/mmu.cc
   ${BASE_DIR}/src/cartridge.cc
+  ${BASE_DIR}/src/serial.cc
 
   # Debug files
 

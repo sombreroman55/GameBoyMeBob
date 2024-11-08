@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include "mmu.hh"
 #include "cartridge.hh"
+#include "serial.hh"
 
 // The fixture for testing class Foo.
 class MemTest : public testing::Test {
@@ -81,3 +82,13 @@ TEST_F(MemTest, ByteWordMix)
     EXPECT_EQ(mem->read_byte(0x1000), 0x21);
     EXPECT_EQ(mem->read_byte(0x1001), 0x43);
 }
+
+TEST_F(MemTest, SerialMapperWorks)
+{
+    gameboymebob::SerialController serial(mem);
+    EXPECT_EQ(mem->serial, nullptr);
+    mem->map_serial(&serial);
+    EXPECT_EQ(mem->serial, &serial);
+}
+
+
