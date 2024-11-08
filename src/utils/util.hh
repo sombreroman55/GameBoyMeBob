@@ -15,14 +15,14 @@ using i64 = int64_t;
 
 namespace utility {
 namespace bitwise {
-    inline void set_bit(u8& val, u8 pos)
+    inline void set_bit(u8* val, u8 pos)
     {
-        val |= (1 << pos);
+        *val |= (1 << pos);
     }
 
-    inline void reset_bit(u8& val, u8 pos)
+    inline void reset_bit(u8* val, u8 pos)
     {
-        val &= ~(1 << pos);
+        *val &= ~(1 << pos);
     }
 };
 };
