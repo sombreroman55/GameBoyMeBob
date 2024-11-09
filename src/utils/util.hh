@@ -24,5 +24,15 @@ namespace bitwise {
     {
         *val &= ~(1 << pos);
     }
+
+    inline u8 get_bit(u8* val, u8 pos)
+    {
+        return (*val >> pos) & 0x1;
+    }
+
+    inline bool is_bit_set(u8* val, u8 pos)
+    {
+        return (*val & (1 << pos)) != 0;
+    }
 };
 };
