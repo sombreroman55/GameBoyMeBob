@@ -1,6 +1,7 @@
 #include "mmu.hh"
 #include "cartridge.hh"
 #include "serial.hh"
+#include <unistd.h>
 
 namespace gameboymebob {
 Mmu::Mmu() { }
@@ -9,9 +10,6 @@ Mmu::~Mmu() { }
 void Mmu::write_io_byte(u16 addr, u8 byte)
 {
     switch (addr) {
-    case 0xFF01:
-        serial->load_transfer_byte(byte);
-        break;
     case 0xFF02:
         // For Blargg's unit tests
         if (byte == 0x81) {
@@ -53,6 +51,19 @@ void Mmu::write_word(u16 addr, u16 word)
 {
     memory[addr] = word & 0xFF;
     memory[addr + 1] = (word >> 8) & 0xFF;
+}
+
+void Mmu::push_stack(u16* stack, u16 word)
+{
+    *stack -= 2;
+    write_word(*stack, word);
+}
+
+u16 Mmu::pop_stack(u16* stack)
+{
+    u16 value = read_word(*stack);
+    *stack += 2;
+    return value;
 }
 
 void Mmu::load_cartridge(Cartridge* cart)

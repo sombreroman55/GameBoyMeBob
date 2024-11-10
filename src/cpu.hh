@@ -1,5 +1,6 @@
 #pragma once
 
+#include "interrupts.hh"
 #include "mmu.hh"
 #include "registers.hh"
 #include "utils/util.hh"
@@ -9,6 +10,26 @@ class Cpu {
 private:
     void inc(u8* r);
     void dec(u8* r);
+
+    // 8-bit ALU stuff
+    void add(u8 val);
+    void adc(u8 val);
+    void sub(u8 val);
+    void sbc(u8 val);
+
+    void _and(u8 val);
+    void _xor(u8 val);
+    void _or(u8 val);
+    void cp(u8 val);
+
+    // 16-bit stuff
+    void add(u16* dest, i8 src);
+    void add(u16* dest, u16 src);
+
+    // Misc stuff
+    void daa();
+    void ldhl(i8 val);
+    void unimplemented();
 
     // CB opcodes
     void rlc(u8* r);
@@ -22,14 +43,16 @@ private:
     void bit(u8 r, u8 pos);
 
 public:
-    Registers* reg;
+    Registers* reg = nullptr;
+    InterruptController* interrupts = nullptr;
     Mmu* mem = nullptr;
 
-    bool halted  = false;
+    bool ime = false;
+    bool halted = false;
+    bool halt_bug = false;
     bool stopped = false;
 
-    Cpu(); // standalone constructor for testing
-    Cpu(Mmu* mmu);
+    Cpu(Mmu* mmu, InterruptController* ic);
     ~Cpu();
 
     u32 step(void);

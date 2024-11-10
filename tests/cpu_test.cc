@@ -1,9 +1,34 @@
 #include "cpu.hh"
+#include "interrupts.hh"
 #include "mmu.hh"
 #include "registers.hh"
+#include <cstdint>
 #include <cstdlib>
 #include <ctime>
 #include <gtest/gtest.h>
+#include <sys/types.h>
+
+static const uint16_t rlc_tests[256] = {
+  0,   2,   4,   6,   8,  10,  12,  14,  16,  18,  20,  22,  24,  26,  28,  30,
+ 32,  34,  36,  38,  40,  42,  44,  46,  48,  50,  52,  54,  56,  58,  60,  62,
+ 64,  66,  68,  70,  72,  74,  76,  78,  80,  82,  84,  86,  88,  90,  92,  94,
+ 96,  98, 100, 102, 104, 106, 108, 110, 112, 114, 116, 118, 120, 122, 124, 126,
+128, 130, 132, 134, 136, 138, 140, 142, 144, 146, 148, 150, 152, 154, 156, 158,
+160, 162, 164, 166, 168, 170, 172, 174, 176, 178, 180, 182, 184, 186, 188, 190,
+192, 194, 196, 198, 200, 202, 204, 206, 208, 210, 212, 214, 216, 218, 220, 222,
+224, 226, 228, 230, 232, 234, 236, 238, 240, 242, 244, 246, 248, 250, 252, 254,
+257, 259, 261, 263, 265, 267, 269, 271, 273, 275, 277, 279, 281, 283, 285, 287,
+289, 291, 293, 295, 297, 299, 301, 303, 305, 307, 309, 311, 313, 315, 317, 319,
+321, 323, 325, 327, 329, 331, 333, 335, 337, 339, 341, 343, 345, 347, 349, 351,
+353, 355, 357, 359, 361, 363, 365, 367, 369, 371, 373, 375, 377, 379, 381, 383,
+385, 387, 389, 391, 393, 395, 397, 399, 401, 403, 405, 407, 409, 411, 413, 415,
+417, 419, 421, 423, 425, 427, 429, 431, 433, 435, 437, 439, 441, 443, 445, 447,
+449, 451, 453, 455, 457, 459, 461, 463, 465, 467, 469, 471, 473, 475, 477, 479,
+481, 483, 485, 487, 489, 491, 493, 495, 497, 499, 501, 503, 505, 507, 509, 511
+};
+
+
+
 
 // The fixture for testing class Foo.
 class CpuTest : public testing::Test {
@@ -15,15 +40,17 @@ protected:
     {
         // You can do set-up work for each test here.
         mem = new gameboymebob::Mmu();
-        cpu = new gameboymebob::Cpu(mem);
+        ic  = new gameboymebob::InterruptController(mem);
+        cpu = new gameboymebob::Cpu(mem, ic);
         srand(time(NULL));
     }
 
     ~CpuTest() override
     {
         // You can do clean-up work that doesn't throw exceptions here.
-        if (cpu)
-            delete cpu;
+        if (cpu) delete cpu;
+        if (ic)  delete ic;
+        if (mem) delete mem;
     }
 
     // If the constructor and destructor are not enough for setting up
@@ -124,19 +151,15 @@ protected:
 
     void TestRlcs(uint8_t opcode, uint8_t* reg)
     {
-        *reg = 0b00110011;
-        int consumed = cpu->execute_cb(opcode);
-        EXPECT_EQ(*reg, 0b01100110);
-        EXPECT_FALSE(cpu->reg->flag_is_set(gameboymebob::Flag::ZERO));
-        EXPECT_FALSE(cpu->reg->flag_is_set(gameboymebob::Flag::CARRY));
-        EXPECT_EQ(consumed, 2);
-
-        *reg = 0b11001100;
-        consumed = cpu->execute_cb(opcode);
-        EXPECT_EQ(*reg, 0b10011001);
-        EXPECT_FALSE(cpu->reg->flag_is_set(gameboymebob::Flag::ZERO));
-        EXPECT_TRUE(cpu->reg->flag_is_set(gameboymebob::Flag::CARRY));
-        EXPECT_EQ(consumed, 2);
+        for (int i = 0; i < 256; i++)
+        {
+            *reg = (uint8_t)i;
+            int consumed = cpu->execute_cb(opcode);
+            EXPECT_EQ(*reg, rlc_tests[i] & 0xFF);
+            EXPECT_EQ(cpu->reg->flag_is_set(gameboymebob::Flag::ZERO), !*reg);
+            EXPECT_EQ(cpu->reg->flag_is_set(gameboymebob::Flag::CARRY), (rlc_tests[i] >> 8));
+            EXPECT_EQ(consumed, 2);
+        }
     }
 
     void TestBits(uint8_t opcode, uint8_t* reg)
@@ -182,6 +205,7 @@ protected:
     // for Foo.
     gameboymebob::Cpu* cpu = nullptr;
     gameboymebob::Mmu* mem = nullptr;
+    gameboymebob::InterruptController* ic = nullptr;
     const int repetitions = 256;
 };
 
@@ -190,6 +214,18 @@ TEST_F(CpuTest, Opcode00)
     int consumed = cpu->execute(0x00);
     EXPECT_EQ(cpu->reg->a, 0x01);
     EXPECT_EQ(consumed, 1);
+}
+
+TEST_F(CpuTest, Opcode01)
+{
+    for (int i = 0; i < repetitions; i++) {
+        cpu->reg->pc = 0x1000;
+        u16 rval = rand() & 0xFFFF;
+        cpu->mem->write_word(cpu->reg->pc, rval);
+        int consumed = cpu->execute(0x01);
+        EXPECT_EQ(cpu->reg->bc, rval);
+        EXPECT_EQ(consumed, 3);
+    }
 }
 
 TEST_F(CpuTest, Opcode02)
@@ -639,6 +675,18 @@ TEST_F(CpuTest, Opcode76)
     EXPECT_EQ(cpu->halted, false);
     int consumed = cpu->execute(0x76);
     EXPECT_EQ(cpu->halted, true);
+    EXPECT_EQ(consumed, 1);
+}
+
+TEST_F(CpuTest, Opcode76HaltBug)
+{
+    cpu->ime = false;
+    cpu->interrupts->enable_interrupt(gameboymebob::Interrupt::JOYPAD);
+    cpu->interrupts->set_interrupt(gameboymebob::Interrupt::JOYPAD);
+    EXPECT_EQ(cpu->halted, false);
+    int consumed = cpu->execute(0x76);
+    EXPECT_EQ(cpu->halted, true);
+    EXPECT_EQ(cpu->halt_bug, true);
     EXPECT_EQ(consumed, 1);
 }
 

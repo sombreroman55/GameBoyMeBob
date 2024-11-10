@@ -32,6 +32,9 @@ public:
     void write_byte(u16 addr, u8 byte);
     void write_word(u16 addr, u16 word);
 
+    void push_stack(u16* stack, u16 word);
+    u16 pop_stack(u16* stack);
+
     void load_cartridge(Cartridge* cart);
 };
 };

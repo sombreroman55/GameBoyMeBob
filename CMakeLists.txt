@@ -19,6 +19,7 @@ set(GBMB_SRCS
   # Core files
   ${BASE_DIR}/src/cartridge.cc
   ${BASE_DIR}/src/cpu.cc
+  ${BASE_DIR}/src/interrupts.cc
   ${BASE_DIR}/src/mmu.cc
   ${BASE_DIR}/src/registers.cc
   ${BASE_DIR}/src/serial.cc
@@ -36,6 +37,7 @@ set(GBMB_SRCS
 
 add_executable(${GBMB_TARGET}
   ${GBMB_SRCS}
+  ${BASE_DIR}/main.cc
 )
 
 target_include_directories(${GBMB_TARGET} PRIVATE

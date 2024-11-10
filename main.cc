@@ -1,15 +1,23 @@
 // Simple main file to start running Blargg files
 
-#include "cpu.hh"
-#include "mmu.hh"
 #include "cartridge.hh"
+#include "cpu.hh"
+#include "interrupts.hh"
+#include "mmu.hh"
+#include "serial.hh"
+#include <string>
 
-int main (int argc, char *argv[]) {
+int main(int argc, char* argv[])
+{
+    std::string rom_file(argv[1]);
+
     gameboymebob::Mmu* mem = new gameboymebob::Mmu();
-    gameboymebob::Cartridge* cart = new gameboymebob::Cartridge("/home/droo/sources/gb-test-roms/cpu_instrs/individual/06-ld r,r.gb");
+    gameboymebob::Cartridge* cart = new gameboymebob::Cartridge(rom_file);
     mem->load_cartridge(cart);
-    gameboymebob::Cpu* cpu = new gameboymebob::Cpu(mem);
-    while(true) {
+    gameboymebob::InterruptController* ic = new gameboymebob::InterruptController(mem);
+    gameboymebob::SerialController* sc = new gameboymebob::SerialController(mem);
+    gameboymebob::Cpu* cpu = new gameboymebob::Cpu(mem, ic);
+    while (true) {
         cpu->step();
     }
     return 0;

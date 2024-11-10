@@ -25,6 +25,9 @@ public:
     void set_interrupt(Interrupt i);
     void clear_interrupt(Interrupt i);
 
+    void enable_interrupt(Interrupt i);
+    void disable_interrupt(Interrupt i);
+
     u8 get_flagged_interrupts(void);
     u8 get_enabled_interrupts(void);
 };
