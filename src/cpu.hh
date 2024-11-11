@@ -42,12 +42,15 @@ private:
     void srl(u8* r);
     void bit(u8 r, u8 pos);
 
+    u32 handle_interrupt(u8 i);
+
 public:
     Registers* reg = nullptr;
     InterruptController* interrupts = nullptr;
     Mmu* mem = nullptr;
 
     bool ime = false;
+    bool pending_ime = false;
     bool halted = false;
     bool halt_bug = false;
     bool stopped = false;

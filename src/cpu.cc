@@ -18,10 +18,58 @@ Cpu::~Cpu()
     delete reg;
 }
 
+u32 Cpu::handle_interrupt(u8 i)
+{
+    constexpr u32 interrupt_ticks = 5;
+    static const u16 interrupt_vector[5] = { 0x0040, 0x0048, 0x0050, 0x0058, 0x0060 };
+    Interrupt intr = static_cast<Interrupt>(i);
+    ime = false;
+    halted = false;
+    interrupts->clear_interrupt(intr);
+
+    // Call interrupt handler
+    mem->push_stack(&reg->sp, reg->pc);
+    reg->pc = interrupt_vector[i];
+
+    // The whole process takes 5 mcycles
+    return interrupt_ticks;
+}
+
 u32 Cpu::step(void)
 {
-    u32 cycles_consumed;
+    u32 cycles_consumed = 1;
+    if (stopped) {
+        return cycles_consumed;
+    }
+
+    // Check for interrupts
+    u8 enabled_interrupts = interrupts->get_enabled_interrupts();
+    u8 flagged_interrupts = interrupts->get_flagged_interrupts();
+    u8 pending_interrupts = (enabled_interrupts & flagged_interrupts & 0x1F);
+
+    if (halted && pending_interrupts) {
+        halted = false;
+    }
+
+    bool effective_ime = ime;
+    if (effective_ime && pending_interrupts) {
+        for (u8 i = 0; i < 5; i++) {
+            u8 intr = (1 << i);
+            if (pending_interrupts & intr) {
+                return handle_interrupt(i);
+            }
+        }
+    }
+
+    if (halted) {
+        return cycles_consumed;
+    }
+
     u8 opcode = mem->read_byte(reg->pc++);
+    if (pending_ime) {
+        ime = true;
+        pending_ime = false;
+    }
 
     if (opcode == 0xCB) {
         // CB prefix
@@ -29,6 +77,11 @@ u32 Cpu::step(void)
         cycles_consumed = execute_cb(cb_opcode);
     } else {
         cycles_consumed = execute(opcode);
+    }
+
+    if (halt_bug) {
+        reg->pc--;
+        halt_bug = false;
     }
 
     return cycles_consumed;
@@ -550,10 +603,17 @@ u32 Cpu::execute(u8 opcode)
         break;
 
     case 0x76: // halt
-        if (!ime && ((interrupts->get_flagged_interrupts() & interrupts->get_enabled_interrupts()) != 0)) {
-            halt_bug = true;
+        if ((interrupts->get_flagged_interrupts() & interrupts->get_enabled_interrupts()) != 0) {
+            if (ime) {
+                halted = false;
+                reg->pc--;
+            } else {
+                halted = false;
+                halt_bug = true;
+            }
+        } else {
+            halted = true;
         }
-        halted = true;
         break;
 
     case 0x77: // ld [hl], a
@@ -1002,8 +1062,8 @@ u32 Cpu::execute(u8 opcode)
         break;
 
     case 0xD9: // reti
-        ime = true;
         reg->pc = mem->pop_stack(&reg->sp);
+        ime = true;
         break;
 
     case 0xDA: // jp c, u16
@@ -1163,7 +1223,9 @@ u32 Cpu::execute(u8 opcode)
         break;
 
     case 0xFB: // ei
-        ime = true;
+        if (!ime && !pending_ime) {
+            pending_ime = true;
+        }
         break;
 
     case 0xFC: // should crash gb
