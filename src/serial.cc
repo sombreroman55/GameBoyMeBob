@@ -3,8 +3,8 @@
 namespace gameboymebob {
 SerialController::SerialController(Mmu* mmu)
     : mem(mmu)
-    , sb(&mem->memory[0xFF01])
-    , sc(&mem->memory[0xFF02])
+    , sb(&mem->memory[IoRegisters::sb])
+    , sc(&mem->memory[IoRegisters::sc])
 {
     *sb = 0x00;
     *sc = 0x7E;

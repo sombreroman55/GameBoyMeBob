@@ -7,17 +7,31 @@ namespace gameboymebob {
 Mmu::Mmu() { }
 Mmu::~Mmu() { }
 
+bool Mmu::in_range(u16 addr, MemRange range)
+{
+    return range.first <= addr && addr <= range.second;
+}
+
+u8 Mmu::read_io_byte(u16 addr)
+{
+    switch (addr) {
+    default:
+        // No special handling, just return the byte
+        return memory[addr];
+    }
+}
+
 void Mmu::write_io_byte(u16 addr, u8 byte)
 {
     switch (addr) {
-    case 0xFF02:
+    case IoRegisters::sc:
         // For Blargg's unit tests
         if (byte == 0x81) {
-            printf("%c", memory[0xFF01]);
+            printf("%c", memory[IoRegisters::sb]);
         }
         break;
     default:
-        // Nothing special, just write the byte
+        // No special handling, write the byte
         memory[addr] = byte;
         break;
     }
@@ -30,6 +44,41 @@ void Mmu::map_serial(SerialController* ser)
 
 u8 Mmu::read_byte(u16 addr)
 {
+    // TODO: Later, add any device specific logic here
+    if (in_range(addr, memory_map::rom_bank0)) {
+    }
+
+    if (in_range(addr, memory_map::rom_bankN)) {
+    }
+
+    if (in_range(addr, memory_map::video_ram)) {
+    }
+
+    if (in_range(addr, memory_map::ext_ram)) {
+    }
+
+    if (in_range(addr, memory_map::work_ram0)) {
+    }
+
+    if (in_range(addr, memory_map::work_ramN)) {
+    }
+
+    if (in_range(addr, memory_map::echo_ram)) {
+    }
+
+    if (in_range(addr, memory_map::oam_ram)) {
+    }
+
+    if (in_range(addr, memory_map::prohibited)) {
+    }
+
+    if (in_range(addr, memory_map::io_region)) {
+        return read_io_byte(addr);
+    }
+
+    if (in_range(addr, memory_map::high_ram)) {
+    }
+
     return memory[addr];
 }
 
@@ -40,10 +89,42 @@ u16 Mmu::read_word(u16 addr)
 
 void Mmu::write_byte(u16 addr, u8 byte)
 {
-    if (0xFF00 <= addr && addr <= 0xFF7F) {
+    // TODO: Later, add any device specific logic here
+    if (in_range(addr, memory_map::rom_bank0)) {
+    }
+
+    if (in_range(addr, memory_map::rom_bankN)) {
+    }
+
+    if (in_range(addr, memory_map::video_ram)) {
+    }
+
+    if (in_range(addr, memory_map::ext_ram)) {
+    }
+
+    if (in_range(addr, memory_map::work_ram0)) {
+    }
+
+    if (in_range(addr, memory_map::work_ramN)) {
+    }
+
+    if (in_range(addr, memory_map::echo_ram)) {
+    }
+
+    if (in_range(addr, memory_map::oam_ram)) {
+    }
+
+    if (in_range(addr, memory_map::prohibited)) {
+    }
+
+    if (in_range(addr, memory_map::io_region)) {
         write_io_byte(addr, byte);
         return;
     }
+
+    if (in_range(addr, memory_map::high_ram)) {
+    }
+
     memory[addr] = byte;
 }
 

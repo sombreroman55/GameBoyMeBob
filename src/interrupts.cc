@@ -4,8 +4,8 @@
 namespace gameboymebob {
 InterruptController::InterruptController(Mmu* mmu)
     : mem(mmu)
-    , _if(&mem->memory[0xFF0F])
-    , _ie(&mem->memory[0xFFFF])
+    , _if(&mem->memory[IoRegisters::_if])
+    , _ie(&mem->memory[IoRegisters::_ie])
 {
     *_if = 0xE1;
     *_ie = 0x00;
