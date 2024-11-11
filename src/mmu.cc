@@ -41,6 +41,11 @@ void Mmu::write_io_byte(u16 addr, u8 byte)
     }
 }
 
+void Mmu::map_cartridge(Cartridge* c)
+{
+    cart = c;
+}
+
 void Mmu::map_serial(SerialController* ser)
 {
     serial = ser;
@@ -53,11 +58,12 @@ void Mmu::map_timer(Timer* tm)
 
 u8 Mmu::read_byte(u16 addr)
 {
-    // TODO: Later, add any device specific logic here
     if (in_range(addr, memory_map::rom_bank0)) {
+        return cart->read_byte(addr);
     }
 
     if (in_range(addr, memory_map::rom_bankN)) {
+        return cart->read_byte(addr);
     }
 
     if (in_range(addr, memory_map::video_ram)) {
@@ -98,11 +104,14 @@ u16 Mmu::read_word(u16 addr)
 
 void Mmu::write_byte(u16 addr, u8 byte)
 {
-    // TODO: Later, add any device specific logic here
     if (in_range(addr, memory_map::rom_bank0)) {
+        cart->write_byte(addr, byte);
+        return;
     }
 
     if (in_range(addr, memory_map::rom_bankN)) {
+        cart->write_byte(addr, byte);
+        return;
     }
 
     if (in_range(addr, memory_map::video_ram)) {
@@ -154,13 +163,6 @@ u16 Mmu::pop_stack(u16* stack)
     u16 value = read_word(*stack);
     *stack += 2;
     return value;
-}
-
-void Mmu::load_cartridge(Cartridge* cart)
-{
-    for (int i = 0; i < 0x8000; i++) {
-        memory[i] = cart->rom_data[i];
-    }
 }
 
 };

@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
 
     gameboymebob::Mmu* mem = new gameboymebob::Mmu();
     gameboymebob::Cartridge* cart = new gameboymebob::Cartridge(rom_file);
-    mem->load_cartridge(cart);
+    mem->map_cartridge(cart);
     gameboymebob::InterruptController* ic = new gameboymebob::InterruptController(mem);
     gameboymebob::SerialController* sc = new gameboymebob::SerialController(mem);
     gameboymebob::Cpu* cpu = new gameboymebob::Cpu(mem, ic);

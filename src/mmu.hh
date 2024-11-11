@@ -116,6 +116,7 @@ public:
     std::array<u8, 0x10000> memory = {};
 
     // Memory mapped components
+    Cartridge* cart = nullptr;
     SerialController* serial = nullptr;
     Timer* timer = nullptr;
 
@@ -123,6 +124,7 @@ public:
     ~Mmu();
 
     // Device mapping functions
+    void map_cartridge(Cartridge* c);
     void map_serial(SerialController* ser);
     void map_timer(Timer* tm);
 
@@ -134,8 +136,6 @@ public:
 
     void push_stack(u16* stack, u16 word);
     u16 pop_stack(u16* stack);
-
-    void load_cartridge(Cartridge* cart);
 
     // TODO: Later, add ppu utility reads for tiles
 };

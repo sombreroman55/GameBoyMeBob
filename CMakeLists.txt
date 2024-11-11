@@ -25,6 +25,9 @@ set(GBMB_SRCS
   ${BASE_DIR}/src/serial.cc
   ${BASE_DIR}/src/timer.cc
 
+  ## Memory Bank Controllers
+  ${BASE_DIR}/src/mbc/mbc0.cc
+
   # Debug files
 
   # Util files
