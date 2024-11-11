@@ -8,6 +8,7 @@ SerialController::SerialController(Mmu* mmu)
 {
     *sb = 0x00;
     *sc = 0x7E;
+    mem->map_serial(this);
 }
 
 SerialController::~SerialController() {}

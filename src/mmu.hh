@@ -9,6 +9,7 @@ namespace gameboymebob {
 
 // forward declarations for compiler
 class SerialController;
+class Timer;
 
 // clang-format off
 enum IoRegisters : u16 {
@@ -116,12 +117,14 @@ public:
 
     // Memory mapped components
     SerialController* serial = nullptr;
+    Timer* timer = nullptr;
 
     Mmu();
     ~Mmu();
 
     // Device mapping functions
     void map_serial(SerialController* ser);
+    void map_timer(Timer* tm);
 
     u8 read_byte(u16 addr);
     u16 read_word(u16 addr);

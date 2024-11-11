@@ -5,6 +5,7 @@
 #include "interrupts.hh"
 #include "mmu.hh"
 #include "serial.hh"
+#include "timer.hh"
 #include <string>
 
 int main(int argc, char* argv[])
@@ -17,8 +18,20 @@ int main(int argc, char* argv[])
     gameboymebob::InterruptController* ic = new gameboymebob::InterruptController(mem);
     gameboymebob::SerialController* sc = new gameboymebob::SerialController(mem);
     gameboymebob::Cpu* cpu = new gameboymebob::Cpu(mem, ic);
+    gameboymebob::Timer* timer = new gameboymebob::Timer(mem, ic);
     while (true) {
-        cpu->step();
+        u32 cycles = cpu->step();
+        if (!cpu->stopped) {
+            timer->tick(cycles);
+        }
     }
+
+    delete timer;
+    delete cpu;
+    delete sc;
+    delete ic;
+    delete cart;
+    delete mem;
+
     return 0;
 }

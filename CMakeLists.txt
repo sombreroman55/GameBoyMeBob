@@ -23,6 +23,7 @@ set(GBMB_SRCS
   ${BASE_DIR}/src/mmu.cc
   ${BASE_DIR}/src/registers.cc
   ${BASE_DIR}/src/serial.cc
+  ${BASE_DIR}/src/timer.cc
 
   # Debug files
 

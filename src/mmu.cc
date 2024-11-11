@@ -1,6 +1,7 @@
 #include "mmu.hh"
 #include "cartridge.hh"
 #include "serial.hh"
+#include "timer.hh"
 #include <unistd.h>
 
 namespace gameboymebob {
@@ -30,6 +31,9 @@ void Mmu::write_io_byte(u16 addr, u8 byte)
             printf("%c", memory[IoRegisters::sb]);
         }
         break;
+    case IoRegisters::div:
+        timer->reset_div();
+        break;
     default:
         // No special handling, write the byte
         memory[addr] = byte;
@@ -40,6 +44,11 @@ void Mmu::write_io_byte(u16 addr, u8 byte)
 void Mmu::map_serial(SerialController* ser)
 {
     serial = ser;
+}
+
+void Mmu::map_timer(Timer* tm)
+{
+    timer = tm;
 }
 
 u8 Mmu::read_byte(u16 addr)
