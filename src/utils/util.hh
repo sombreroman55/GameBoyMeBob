@@ -3,6 +3,7 @@
 #include "spdlog/spdlog.h"
 #include <cstdint>
 
+// Useful project wide typedefs
 using u8 = uint8_t;
 using u16 = uint16_t;
 using u32 = uint32_t;
@@ -13,7 +14,14 @@ using i16 = int16_t;
 using i32 = int32_t;
 using i64 = int64_t;
 
+using MemRange = std::pair<u16, u16>;
+
 namespace utility {
+inline bool in_range(u16 addr, MemRange range)
+{
+    return range.first <= addr && addr <= range.second;
+}
+
 namespace bitwise {
     inline void set_bit(u8* val, u8 pos)
     {

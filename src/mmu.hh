@@ -87,8 +87,6 @@ enum IoRegisters : u16 {
 };
 // clang-format on
 
-using MemRange = std::pair<u16, u16>;
-
 // clang-format off
 namespace memory_map {
     constexpr MemRange rom_bank0  = { 0x0000, 0x3FFF };
@@ -108,7 +106,6 @@ namespace memory_map {
 
 class Mmu {
 private:
-    bool in_range(u16 addr, MemRange range);
     u8 read_io_byte(u16 addr);
     void write_io_byte(u16 addr, u8 byte);
 

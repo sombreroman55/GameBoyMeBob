@@ -8,11 +8,6 @@ namespace gameboymebob {
 Mmu::Mmu() { }
 Mmu::~Mmu() { }
 
-bool Mmu::in_range(u16 addr, MemRange range)
-{
-    return range.first <= addr && addr <= range.second;
-}
-
 u8 Mmu::read_io_byte(u16 addr)
 {
     switch (addr) {
@@ -58,40 +53,41 @@ void Mmu::map_timer(Timer* tm)
 
 u8 Mmu::read_byte(u16 addr)
 {
-    if (in_range(addr, memory_map::rom_bank0)) {
+    if (utility::in_range(addr, memory_map::rom_bank0)) {
         return cart->read_byte(addr);
     }
 
-    if (in_range(addr, memory_map::rom_bankN)) {
+    if (utility::in_range(addr, memory_map::rom_bankN)) {
         return cart->read_byte(addr);
     }
 
-    if (in_range(addr, memory_map::video_ram)) {
+    if (utility::in_range(addr, memory_map::video_ram)) {
     }
 
-    if (in_range(addr, memory_map::ext_ram)) {
+    if (utility::in_range(addr, memory_map::ext_ram)) {
+        return cart->read_byte(addr);
     }
 
-    if (in_range(addr, memory_map::work_ram0)) {
+    if (utility::in_range(addr, memory_map::work_ram0)) {
     }
 
-    if (in_range(addr, memory_map::work_ramN)) {
+    if (utility::in_range(addr, memory_map::work_ramN)) {
     }
 
-    if (in_range(addr, memory_map::echo_ram)) {
+    if (utility::in_range(addr, memory_map::echo_ram)) {
     }
 
-    if (in_range(addr, memory_map::oam_ram)) {
+    if (utility::in_range(addr, memory_map::oam_ram)) {
     }
 
-    if (in_range(addr, memory_map::prohibited)) {
+    if (utility::in_range(addr, memory_map::prohibited)) {
     }
 
-    if (in_range(addr, memory_map::io_region)) {
+    if (utility::in_range(addr, memory_map::io_region)) {
         return read_io_byte(addr);
     }
 
-    if (in_range(addr, memory_map::high_ram)) {
+    if (utility::in_range(addr, memory_map::high_ram)) {
     }
 
     return memory[addr];
@@ -104,43 +100,45 @@ u16 Mmu::read_word(u16 addr)
 
 void Mmu::write_byte(u16 addr, u8 byte)
 {
-    if (in_range(addr, memory_map::rom_bank0)) {
+    if (utility::in_range(addr, memory_map::rom_bank0)) {
         cart->write_byte(addr, byte);
         return;
     }
 
-    if (in_range(addr, memory_map::rom_bankN)) {
+    if (utility::in_range(addr, memory_map::rom_bankN)) {
         cart->write_byte(addr, byte);
         return;
     }
 
-    if (in_range(addr, memory_map::video_ram)) {
+    if (utility::in_range(addr, memory_map::video_ram)) {
     }
 
-    if (in_range(addr, memory_map::ext_ram)) {
+    if (utility::in_range(addr, memory_map::ext_ram)) {
+        cart->write_byte(addr, byte);
+        return;
     }
 
-    if (in_range(addr, memory_map::work_ram0)) {
+    if (utility::in_range(addr, memory_map::work_ram0)) {
     }
 
-    if (in_range(addr, memory_map::work_ramN)) {
+    if (utility::in_range(addr, memory_map::work_ramN)) {
     }
 
-    if (in_range(addr, memory_map::echo_ram)) {
+    if (utility::in_range(addr, memory_map::echo_ram)) {
     }
 
-    if (in_range(addr, memory_map::oam_ram)) {
+    if (utility::in_range(addr, memory_map::oam_ram)) {
     }
 
-    if (in_range(addr, memory_map::prohibited)) {
+    if (utility::in_range(addr, memory_map::prohibited)) {
     }
 
-    if (in_range(addr, memory_map::io_region)) {
+    if (utility::in_range(addr, memory_map::io_region)) {
         write_io_byte(addr, byte);
         return;
     }
 
-    if (in_range(addr, memory_map::high_ram)) {
+    if (utility::in_range(addr, memory_map::high_ram)) {
     }
 
     memory[addr] = byte;

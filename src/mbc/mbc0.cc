@@ -10,11 +10,14 @@ class Cartridge;
 
 u8 Mbc0::read_byte(u16 addr)
 {
+    // Just pass the byte through directly
     return cart->rom_data[addr];
 }
 
 void Mbc0::write_byte(u16 addr, u8 byte)
 {
+    // Ignore this write, we are truly ROM
     return;
 }
+
 };
