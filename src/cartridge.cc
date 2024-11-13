@@ -1,61 +1,43 @@
 #include "cartridge.hh"
-#include "mbc/mbc0.hh"
 #include <fstream>
+#include <vector>
+
+// TODO: Later, add support for serializing and deserialzing RAM data
+//       to a file for save states on games that have ram
 
 namespace gameboymebob {
 Cartridge::Cartridge(std::string rom)
 {
-    // open the file:
     std::ifstream file(rom, std::ios::binary);
+    if (file) {
+        std::streampos header_pos = 0x100;
+        size_t header_size = 0x50;
 
-    // Stop eating new lines in binary mode!!!
-    file.unsetf(std::ios::skipws);
+        // read char data
+        file.seekg(header_pos, std::ios::beg);
+        std::vector<char> header_chars(header_size);
+        file.read(header_chars.data(), header_size);
 
-    // get its size:
-    std::streampos fileSize;
+        // copy to u8 vector
+        std::vector<u8> header_bytes(header_size);
+        std::copy(header_chars.begin(), header_chars.end(), std::back_inserter(header_bytes));
 
-    file.seekg(0, std::ios::end);
-    fileSize = file.tellg();
-    file.seekg(0, std::ios::beg);
+        header.populate(header_bytes);
 
-    // reserve capacity
-    rom_data.resize(fileSize);
-    rom_data.clear();
+        rom.resize(header.rom_size);
+        rom.clear();
 
-    // read the data:
-    rom_data.insert(rom_data.begin(),
-        std::istream_iterator<u8>(file),
-        std::istream_iterator<u8>());
+        rom.insert(rom.begin(),
+            std::istream_iterator<u8>(file),
+            std::istream_iterator<u8>());
 
-    // parse the header
-    parse_header();
+        if (header.ram_size) {
+            ram.resize(header.ram_size);
+        }
+    }
 }
 
 Cartridge::~Cartridge() { }
-
-void Cartridge::parse_header(void)
-{
-    // header.cgb_flag             = rom_data[0x143];
-    header.new_licensee_code[0] = rom_data[0x144];
-    header.new_licensee_code[1] = rom_data[0x145];
-    header.sgb_flag = rom_data[0x146];
-    header.cart_type = rom_data[0x147];
-    header.rom_size = rom_data[0x148];
-    header.ram_size = rom_data[0x149];
-    header.destination = rom_data[0x14A];
-    header.old_licensee_code = rom_data[0x14B];
-    header.version_number = rom_data[0x14C];
-    header.checksum = rom_data[0x14D];
-
-    header.global_checksum = ((rom_data[0x14E] << 8) | rom_data[0x14F]);
-
-    // TODO: Add the other bank controllers here
-    if (header.cart_type == 0x00) {
-        bank_controller = new Mbc0(this);
-    }
-
-    header.print();
-}
 
 u8 Cartridge::read_byte(u16 addr)
 {

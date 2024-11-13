@@ -48,7 +48,7 @@ TEST_F(MemTest, CartCopyWorks)
     cart = new gameboymebob::Cartridge("/home/droo/roms/gb/tetris.gb");
     mem->load_cartridge(cart);
     for (int i = 0; i < 0x8000; i++) {
-        EXPECT_EQ(mem->memory[i], cart->rom_data[i]);
+        EXPECT_EQ(mem->memory[i], cart->rom[i]);
     }
 }
 
