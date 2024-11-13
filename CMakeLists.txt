@@ -27,6 +27,7 @@ set(GBMB_SRCS
 
   ## Memory Bank Controllers
   ${BASE_DIR}/src/mbc/mbc0.cc
+  ${BASE_DIR}/src/mbc/mbc1.cc
 
   # Debug files
 

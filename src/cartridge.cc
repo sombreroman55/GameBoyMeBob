@@ -1,4 +1,6 @@
 #include "cartridge.hh"
+#include "mbc/mbc0.hh"
+#include "mbc/mbc1.hh"
 #include <fstream>
 #include <vector>
 
@@ -6,26 +8,15 @@
 //       to a file for save states on games that have ram
 
 namespace gameboymebob {
-Cartridge::Cartridge(std::string rom)
+Cartridge::Cartridge(std::string rom_file)
 {
-    std::ifstream file(rom, std::ios::binary);
+    header.populate(rom_file);
+    std::ifstream file(rom_file, std::ios::binary);
     if (file) {
-        std::streampos header_pos = 0x100;
-        size_t header_size = 0x50;
-
-        // read char data
-        file.seekg(header_pos, std::ios::beg);
-        std::vector<char> header_chars(header_size);
-        file.read(header_chars.data(), header_size);
-
-        // copy to u8 vector
-        std::vector<u8> header_bytes(header_size);
-        std::copy(header_chars.begin(), header_chars.end(), std::back_inserter(header_bytes));
-
-        header.populate(header_bytes);
-
         rom.resize(header.rom_size);
         rom.clear();
+
+        file.unsetf(std::ios::skipws);
 
         rom.insert(rom.begin(),
             std::istream_iterator<u8>(file),
@@ -34,7 +25,14 @@ Cartridge::Cartridge(std::string rom)
         if (header.ram_size) {
             ram.resize(header.ram_size);
         }
+
+        if (header.cart_type == "ROM ONLY") {
+            bank_controller = new Mbc0(this);
+        } else if (header.cart_type.find("MBC1") != std::string::npos) {
+            bank_controller = new Mbc1(this);
+        }
     }
+    file.close();
 }
 
 Cartridge::~Cartridge() { }

@@ -4,9 +4,15 @@
 
 #include "mbc/mbc0.hh"
 #include "cartridge.hh"
+#include "mbc/mbc.hh"
 
 namespace gameboymebob {
 class Cartridge;
+
+Mbc0::Mbc0(Cartridge* c)
+    : MbcInterface(c)
+{
+}
 
 u8 Mbc0::read_byte(u16 addr)
 {

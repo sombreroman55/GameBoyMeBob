@@ -65,12 +65,12 @@ u32 Cpu::step(void)
         return cycles_consumed;
     }
 
-    u8 opcode = mem->read_byte(reg->pc++);
     if (pending_ime) {
         ime = true;
         pending_ime = false;
     }
 
+    u8 opcode = mem->read_byte(reg->pc++);
     if (opcode == 0xCB) {
         // CB prefix
         u8 cb_opcode = mem->read_byte(reg->pc++);

@@ -5,6 +5,11 @@
 
 namespace gameboymebob {
 
+Mbc1::Mbc1(Cartridge* c)
+    : MbcInterface(c)
+{
+}
+
 u8 Mbc1::read_byte(u16 addr)
 {
     u16 effective_addr = addr;

@@ -3,6 +3,7 @@
 #include "mbc/mbc.hh"
 #include "utils/util.hh"
 #include <cstdio>
+#include <fstream>
 #include <string>
 #include <unordered_map>
 
@@ -295,29 +296,57 @@ public:
     u8 checksum;
     u16 global_checksum;
 
-    void populate(std::vector<u8>& header_bytes)
+    void populate(std::string rom_file)
     {
-        title = std::string(header_bytes.begin() + 0x34, header_bytes.begin() + 0x43);
-        manufacturer = std::string(header_bytes.begin() + 0x3F, header_bytes.begin() + 0x42);
-        supports_cgb = header_bytes[0x43] == 0x80;
-        supports_sgb = header_bytes[0x46] == 0x03;
-        cart_type = cartridge_types.at(header_bytes[0x47]);
-        u8 licensee_code = header_bytes[0x4B];
-        if (licensee_code == 0x33) {
-            std::string licensee_code(header_bytes.begin() + 0x44, header_bytes.begin() + 0x45);
-            licensee = new_licensees.at(licensee_code);
-        } else {
-            licensee = old_licensees.at(licensee_code);
+        std::ifstream file(rom_file, std::ios::binary);
+        if (file) {
+            std::streampos header_pos = 0x100;
+            size_t header_size = 0x50;
+
+            file.unsetf(std::ios::skipws);
+
+            file.seekg(header_pos, std::ios::beg);
+            std::vector<char> header_chars(header_size);
+            file.read(header_chars.data(), header_size);
+
+            std::vector<u8> header_bytes(header_size);
+            for (int i = 0; i < 0x50; i++) {
+                header_bytes[i] = static_cast<u8>(header_chars[i]);
+            }
+
+            title = std::string(header_bytes.begin() + 0x34, header_bytes.begin() + 0x43);
+            manufacturer = std::string(header_bytes.begin() + 0x3F, header_bytes.begin() + 0x42);
+            supports_cgb = header_bytes[0x43] == 0x80;
+            supports_sgb = header_bytes[0x46] == 0x03;
+            cart_type = cartridge_types.at(header_bytes[0x47]);
+            u8 licensee_code = header_bytes[0x4B];
+            if (licensee_code == 0x33) {
+                std::string licensee_code(header_bytes.begin() + 0x44, header_bytes.begin() + 0x45);
+                licensee = new_licensees.at(licensee_code);
+            } else {
+                licensee = old_licensees.at(licensee_code);
+            }
+            rom_size = rom_sizes[header_bytes[0x48]];
+            ram_size = ram_sizes[header_bytes[0x49]];
+            destination = destinations[header_bytes[0x4A]];
+            version = header_bytes[0x4C];
         }
-        rom_size = rom_sizes[header_bytes[0x48]];
-        ram_size = ram_sizes[header_bytes[0x49]];
-        destination = destinations[header_bytes[0x4A]];
-        version = header_bytes[0x4C];
+        file.close();
+        print();
     }
 
     void print(void)
     {
-        // TODO: Write this
+        printf("Title: %s\n", title.c_str());
+        printf("Manufacturer: %s\n", manufacturer.c_str());
+        printf("Supports CGB: %s\n", (supports_cgb ? "Yes" : "No"));
+        printf("Supports SGB: %s\n", (supports_sgb ? "Yes" : "No"));
+        printf("Cart Type: %s\n", cart_type.c_str());
+        printf("Destination: %s\n", destination.c_str());
+        printf("ROM Size: %lu\n", rom_size);
+        printf("RAM Size: %lu\n", ram_size);
+        printf("Version: %u\n", version);
+        printf("\n");
     }
 };
 
@@ -330,7 +359,7 @@ public:
     std::vector<u8> ram;
     CartridgeHeader header;
 
-    Cartridge(std::string rom);
+    Cartridge(std::string rom_file);
     ~Cartridge();
 
     u8 read_byte(u16 addr);

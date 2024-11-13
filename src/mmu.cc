@@ -95,7 +95,7 @@ u8 Mmu::read_byte(u16 addr)
 
 u16 Mmu::read_word(u16 addr)
 {
-    return (memory[addr + 1] << 8) | memory[addr];
+    return (read_byte(addr + 1) << 8) | read_byte(addr);
 }
 
 void Mmu::write_byte(u16 addr, u8 byte)
@@ -146,8 +146,8 @@ void Mmu::write_byte(u16 addr, u8 byte)
 
 void Mmu::write_word(u16 addr, u16 word)
 {
-    memory[addr] = word & 0xFF;
-    memory[addr + 1] = (word >> 8) & 0xFF;
+    write_byte(addr, word & 0xFF);
+    write_byte(addr + 1, (word >> 8) & 0xFF);
 }
 
 void Mmu::push_stack(u16* stack, u16 word)
