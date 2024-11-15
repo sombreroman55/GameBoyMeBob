@@ -21,6 +21,7 @@ set(GBMB_SRCS
   ${BASE_DIR}/src/cpu.cc
   ${BASE_DIR}/src/interrupts.cc
   ${BASE_DIR}/src/mmu.cc
+  ${BASE_DIR}/src/ppu.cc
   ${BASE_DIR}/src/registers.cc
   ${BASE_DIR}/src/serial.cc
   ${BASE_DIR}/src/timer.cc
@@ -33,15 +34,15 @@ set(GBMB_SRCS
 
   # Util files
 
+)
+
+add_executable(${GBMB_TARGET}
+  ${GBMB_SRCS}
   # Emulator files
 
   # Frontend files
 
   # Main ile
-)
-
-add_executable(${GBMB_TARGET}
-  ${GBMB_SRCS}
   ${BASE_DIR}/main.cc
 )
 

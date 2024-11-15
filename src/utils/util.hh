@@ -2,6 +2,7 @@
 
 #include "spdlog/spdlog.h"
 #include <cstdint>
+#include <fmt/base.h>
 
 // Useful project wide typedefs
 using u8 = uint8_t;
@@ -31,6 +32,15 @@ namespace bitwise {
     inline void reset_bit(u8* val, u8 pos)
     {
         *val &= ~(1 << pos);
+    }
+
+    inline void assign_bit(u8* val, u8 pos, bool on)
+    {
+        if (on) {
+            *val |= (1 << pos);
+        } else {
+            *val &= ~(1 << pos);
+        }
     }
 
     inline u8 get_bit(u8* val, u8 pos)

@@ -1,5 +1,6 @@
 #include "mmu.hh"
 #include "cartridge.hh"
+#include "ppu.hh"
 #include "serial.hh"
 #include "timer.hh"
 #include <unistd.h>
@@ -39,6 +40,11 @@ void Mmu::write_io_byte(u16 addr, u8 byte)
 void Mmu::map_cartridge(Cartridge* c)
 {
     cart = c;
+}
+
+void Mmu::map_ppu(Ppu* p)
+{
+    ppu = p;
 }
 
 void Mmu::map_serial(SerialController* ser)
@@ -111,6 +117,9 @@ void Mmu::write_byte(u16 addr, u8 byte)
     }
 
     if (utility::in_range(addr, memory_map::video_ram)) {
+        u16 effective_addr = addr - memory_map::video_ram.first;
+        ppu->write_vram_byte(effective_addr, byte);
+        return;
     }
 
     if (utility::in_range(addr, memory_map::ext_ram)) {
@@ -128,6 +137,9 @@ void Mmu::write_byte(u16 addr, u8 byte)
     }
 
     if (utility::in_range(addr, memory_map::oam_ram)) {
+        u16 effective_addr = addr - memory_map::oam_ram.first;
+        ppu->write_oam_ram_byte(effective_addr, byte);
+        return;
     }
 
     if (utility::in_range(addr, memory_map::prohibited)) {

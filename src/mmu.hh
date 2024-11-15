@@ -8,6 +8,7 @@
 namespace gameboymebob {
 
 // forward declarations for compiler
+class Ppu;
 class SerialController;
 class Timer;
 
@@ -114,6 +115,7 @@ public:
 
     // Memory mapped components
     Cartridge* cart = nullptr;
+    Ppu* ppu = nullptr;
     SerialController* serial = nullptr;
     Timer* timer = nullptr;
 
@@ -122,6 +124,7 @@ public:
 
     // Device mapping functions
     void map_cartridge(Cartridge* c);
+    void map_ppu(Ppu* p);
     void map_serial(SerialController* ser);
     void map_timer(Timer* tm);
 
