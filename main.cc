@@ -21,9 +21,7 @@ int main(int argc, char* argv[])
     gameboymebob::Timer* timer = new gameboymebob::Timer(mem, ic);
     while (true) {
         u32 cycles = cpu->step();
-        if (!cpu->stopped) {
-            timer->tick(cycles);
-        }
+        timer->tick(cycles);
     }
 
     delete timer;

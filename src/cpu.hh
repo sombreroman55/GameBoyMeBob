@@ -53,7 +53,7 @@ public:
     bool pending_ime = false;
     bool halted = false;
     bool halt_bug = false;
-    bool stopped = false;
+    // bool stopped = false;  // TBD: Do we want to "implement" stopping
 
     Cpu(Mmu* mmu, InterruptController* ic);
     ~Cpu();

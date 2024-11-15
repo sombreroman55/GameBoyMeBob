@@ -38,9 +38,10 @@ u32 Cpu::handle_interrupt(u8 i)
 u32 Cpu::step(void)
 {
     u32 cycles_consumed = 1;
-    if (stopped) {
-        return cycles_consumed;
-    }
+    // if (stopped) {
+        // return cycles_consumed;
+    // }
+    // TBD: Do we want to "implement" stopping?
 
     // Check for interrupts
     u8 enabled_interrupts = interrupts->get_enabled_interrupts();
@@ -76,8 +77,16 @@ u32 Cpu::step(void)
         u8 cb_opcode = mem->read_byte(reg->pc++);
         cycles_consumed = execute_cb(cb_opcode);
     } else {
+        /*
+        printf("%02X", opcode);
+        for (int i = 0; i < instructions[opcode].size-1; i++) {
+            printf(" %02X", mem->read_byte(reg->pc+i));
+        }
+        printf("\n");
+        */
         cycles_consumed = execute(opcode);
     }
+    // reg->print_registers();
 
     if (halt_bug) {
         reg->pc--;
@@ -163,7 +172,7 @@ u32 Cpu::execute(u8 opcode)
         break;
 
     case 0x10: // stop
-        stopped = true;
+        // stopped = true; // TBD: Do we want to "implement" stopping
         break;
 
     case 0x11: // ld de, u16
@@ -1320,7 +1329,7 @@ void Cpu::sbc(u8 val)
 
 void Cpu::_and(u8 val)
 {
-    reg->a = reg->a & val;
+    reg->a &= val;
     reg->set_flag(Flag::ZERO, !reg->a);
     reg->set_flag(Flag::HALF, true);
     reg->set_flag(Flag::NEG, false);
@@ -1329,7 +1338,7 @@ void Cpu::_and(u8 val)
 
 void Cpu::_xor(u8 val)
 {
-    reg->a = reg->a ^ val;
+    reg->a ^= val;
     reg->set_flag(Flag::ZERO, !reg->a);
     reg->set_flag(Flag::HALF, false);
     reg->set_flag(Flag::NEG, false);
@@ -1338,7 +1347,7 @@ void Cpu::_xor(u8 val)
 
 void Cpu::_or(u8 val)
 {
-    reg->a = reg->a | val;
+    reg->a |= val;
     reg->set_flag(Flag::ZERO, !reg->a);
     reg->set_flag(Flag::HALF, false);
     reg->set_flag(Flag::NEG, false);
