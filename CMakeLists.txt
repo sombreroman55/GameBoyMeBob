@@ -19,6 +19,7 @@ set(GBMB_SRCS
   # Core files
   ${BASE_DIR}/src/cartridge.cc
   ${BASE_DIR}/src/cpu.cc
+  ${BASE_DIR}/src/gb.cc
   ${BASE_DIR}/src/interrupts.cc
   ${BASE_DIR}/src/mmu.cc
   ${BASE_DIR}/src/ppu.cc
