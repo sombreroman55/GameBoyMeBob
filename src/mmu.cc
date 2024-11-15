@@ -13,6 +13,8 @@ Mmu::~Mmu() { }
 u8 Mmu::read_io_byte(u16 addr)
 {
     switch (addr) {
+    case IoRegisters::joyp:
+        return joypad->read_button_register();
     default:
         // No special handling, just return the byte
         return memory[addr];
@@ -22,10 +24,19 @@ u8 Mmu::read_io_byte(u16 addr)
 void Mmu::write_io_byte(u16 addr, u8 byte)
 {
     switch (addr) {
+    case IoRegisters::joyp:
+        joypad->write_button_register(byte);
+        break;
     case IoRegisters::sc:
         // For Blargg's unit tests
         if (byte == 0x81) {
             printf("%c", memory[IoRegisters::sb]);
+        }
+        break;
+    case IoRegisters::dma:
+        // TODO: This completely ignores proper timing
+        for (int i = 0; i < 160; i++) {
+            ppu->write_oam_ram_byte(i, read_byte((byte << 8)+i));
         }
         break;
     case IoRegisters::div:

@@ -32,6 +32,7 @@ Ppu::Ppu(Mmu* mmu, InterruptController* ic)
     *wy = 0x00;
     *wx = 0x00;
     mem->map_ppu(this);
+    visible_sprites.reserve(10);
 }
 
 Ppu::~Ppu() { }
@@ -186,7 +187,7 @@ void Ppu::pixel_transfer(void)
                         // Skip transparent pixels
                         if (pixel_data[j] == 0x00)
                             continue;
-                        if (pixels[p + j].palette_source == 0) {
+                        if (pixels[p + j].palette_source < 2) {
                             if (utility::bitwise::is_bit_set(&flag, ObjFlags::priority)) {
                                 if (pixels[p + j].palette_idx == 0x00) {
                                     pixels[p + j].palette_idx = pixel_data[j];

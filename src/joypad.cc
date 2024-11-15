@@ -65,8 +65,7 @@ u8 Joypad::read_directions(void)
 
 void Joypad::write_button_register(u8 b)
 {
-    constexpr u8 write_mask = 0x30;
-    *joyp |= (b & write_mask);
+    *joyp &= ~(b & 0x30);
 }
 
 u8 Joypad::read_button_register(void)
@@ -74,7 +73,7 @@ u8 Joypad::read_button_register(void)
     u8 select_state = (*joyp & 0x30) >> 4;
     switch (select_state) {
     case 0x00: // both selected
-        *joyp &= (read_buttons() || read_directions());
+        *joyp &= (read_buttons() | read_directions());
         break;
     case 0x01: // buttons
         *joyp &= read_buttons();
