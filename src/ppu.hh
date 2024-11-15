@@ -83,6 +83,7 @@ private:
     u32 cycle_count = 0;
     PpuMode mode;
     bool frame_ready = false;
+    bool vram_dirty = false;
 
     void hblank(void);
     void vblank(void);

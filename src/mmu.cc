@@ -1,5 +1,6 @@
 #include "mmu.hh"
 #include "cartridge.hh"
+#include "joypad.hh"
 #include "ppu.hh"
 #include "serial.hh"
 #include "timer.hh"
@@ -40,6 +41,11 @@ void Mmu::write_io_byte(u16 addr, u8 byte)
 void Mmu::map_cartridge(Cartridge* c)
 {
     cart = c;
+}
+
+void Mmu::map_joyad(Joypad* jp)
+{
+    joypad = jp;
 }
 
 void Mmu::map_ppu(Ppu* p)

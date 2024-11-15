@@ -8,6 +8,7 @@ GameBoy::GameBoy()
     serial = new SerialController(mem);
     cpu = new Cpu(mem, interrupts);
     ppu = new Ppu(mem, interrupts);
+    joypad = new Joypad(mem, interrupts);
     timer = new Timer(mem, interrupts);
 }
 
@@ -15,6 +16,7 @@ GameBoy::~GameBoy()
 {
     delete cart;
     delete timer;
+    delete joypad;
     delete cpu;
     delete serial;
     delete interrupts;
@@ -42,5 +44,15 @@ bool GameBoy::frame_ready(void)
 u8* GameBoy::get_frame(void)
 {
     return ppu->get_viewport();
+}
+
+void GameBoy::press_button(Button button)
+{
+    joypad->press_button(button);
+}
+
+void GameBoy::release_button(Button button)
+{
+    joypad->release_button(button);
 }
 };

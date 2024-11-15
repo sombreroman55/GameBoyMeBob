@@ -59,16 +59,54 @@ int main(int argc, char* argv[])
     gameboymebob::Cartridge* cart = new gameboymebob::Cartridge(rom_file);
     gb->insert_cartridge(cart);
 
+    frame_start = std::chrono::steady_clock::now();
     bool done = false;
     SDL_Event ev;
     while (!done) {
-        while (SDL_PollEvent(&ev)) {
-            if (ev.type == SDL_QUIT) {
-                done = true;
-            }
-        }
         gb->run();
         if (gb->frame_ready()) {
+            while (SDL_PollEvent(&ev)) {
+                if (ev.type == SDL_QUIT) {
+                    done = true;
+                } else if (ev.type == SDL_KEYDOWN) {
+                    gameboymebob::Button button = gameboymebob::Button::Invalid;
+                    switch (ev.key.keysym.sym) {
+                        // clang-format off
+                    case SDLK_UP:           button = gameboymebob::Button::Up;      break;
+                    case SDLK_DOWN:         button = gameboymebob::Button::Down;    break;
+                    case SDLK_LEFT:         button = gameboymebob::Button::Left;    break;
+                    case SDLK_RIGHT:        button = gameboymebob::Button::Right;   break;
+                    case SDLK_x:            button = gameboymebob::Button::A;       break;
+                    case SDLK_z:            button = gameboymebob::Button::B;       break;
+                    case SDLK_BACKSPACE:    button = gameboymebob::Button::Select;  break;
+                    case SDLK_RETURN:       button = gameboymebob::Button::Start;   break;
+                        // clang-format on
+                    }
+                    if (button != gameboymebob::Button::Invalid) {
+                        printf("Pressing %c...\n", ev.key.keysym.sym);
+                        gb->press_button(button);
+                    }
+                } else if (ev.type == SDL_KEYUP) {
+                    gameboymebob::Button button = gameboymebob::Button::Invalid;
+                    switch (ev.key.keysym.sym) {
+                        // clang-format off
+                    case SDLK_UP:           button = gameboymebob::Button::Up;      break;
+                    case SDLK_DOWN:         button = gameboymebob::Button::Down;    break;
+                    case SDLK_LEFT:         button = gameboymebob::Button::Left;    break;
+                    case SDLK_RIGHT:        button = gameboymebob::Button::Right;   break;
+                    case SDLK_x:            button = gameboymebob::Button::A;       break;
+                    case SDLK_z:            button = gameboymebob::Button::B;       break;
+                    case SDLK_BACKSPACE:    button = gameboymebob::Button::Select;  break;
+                    case SDLK_RETURN:       button = gameboymebob::Button::Start;   break;
+                        // clang-format on
+                    }
+                    if (button != gameboymebob::Button::Invalid) {
+                        printf("Releasing %c...\n", ev.key.keysym.sym);
+                        gb->release_button(button);
+                    }
+                }
+            }
+
             frame_end = std::chrono::steady_clock::now();
             auto time_spent = std::chrono::duration_cast<std::chrono::milliseconds>(frame_end - frame_start).count();
             std::cout << "Frame took " << time_spent << " ms" << std::endl;

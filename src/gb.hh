@@ -3,6 +3,7 @@
 #include "cartridge.hh"
 #include "cpu.hh"
 #include "interrupts.hh"
+#include "joypad.hh"
 #include "mmu.hh"
 #include "ppu.hh"
 #include "serial.hh"
@@ -14,6 +15,7 @@ private:
     Cpu* cpu = nullptr;
     Cartridge* cart = nullptr;
     InterruptController* interrupts = nullptr;
+    Joypad* joypad = nullptr;
     Mmu* mem = nullptr;
     Ppu* ppu = nullptr;
     SerialController* serial = nullptr;
@@ -25,7 +27,11 @@ public:
 
     void run(void);
     void insert_cartridge(Cartridge* c);
+
     bool frame_ready(void);
     u8* get_frame(void);
+
+    void press_button(Button button);
+    void release_button(Button button);
 };
 };

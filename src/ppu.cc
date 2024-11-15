@@ -240,6 +240,10 @@ void Ppu::pixel_transfer(void)
 
 void Ppu::refresh_maps(void)
 {
+    if (!vram_dirty) {
+        return;
+    }
+
     bool use_8000_method = utility::bitwise::is_bit_set(lcdc, LcdcBits::bg_win_tiledata);
     u16 bg_win_vram_base_addr = use_8000_method ? 0 : 0x1000;
 
@@ -302,6 +306,8 @@ void Ppu::refresh_maps(void)
             }
         }
     }
+
+    vram_dirty = false;
 }
 
 void Ppu::step(u32 cycles)
@@ -355,6 +361,7 @@ u8 Ppu::read_vram_byte(u16 addr)
 void Ppu::write_vram_byte(u16 addr, u8 byte)
 {
     vram[addr] = byte;
+    vram_dirty = true;
 }
 
 u8 Ppu::read_oam_ram_byte(u16 addr)

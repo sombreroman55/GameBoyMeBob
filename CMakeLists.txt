@@ -22,6 +22,7 @@ set(GBMB_SRCS
   ${BASE_DIR}/src/cpu.cc
   ${BASE_DIR}/src/gb.cc
   ${BASE_DIR}/src/interrupts.cc
+  ${BASE_DIR}/src/joypad.cc
   ${BASE_DIR}/src/mmu.cc
   ${BASE_DIR}/src/ppu.cc
   ${BASE_DIR}/src/registers.cc
