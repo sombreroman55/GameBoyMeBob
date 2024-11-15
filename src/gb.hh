@@ -25,5 +25,7 @@ public:
 
     void run(void);
     void insert_cartridge(Cartridge* c);
+    bool frame_ready(void);
+    u8* get_frame(void);
 };
 };

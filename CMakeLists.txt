@@ -14,6 +14,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -ggdb")
 set(BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 find_package(spdlog REQUIRED)
+find_package(SDL2 REQUIRED)
 
 set(GBMB_SRCS
   # Core files
@@ -49,9 +50,11 @@ add_executable(${GBMB_TARGET}
 
 target_include_directories(${GBMB_TARGET} PRIVATE
   ${BASE_DIR}/src
+  ${SDL2_INCLUDE_DIRS}
 )
 
 target_link_libraries(${GBMB_TARGET}
+  ${SDL2_LIBRARIES}
   spdlog::spdlog_header_only
 )
 

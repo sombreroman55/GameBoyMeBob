@@ -83,7 +83,7 @@ void Ppu::vblank(void)
     if (utility::bitwise::is_bit_set(stat, StatBits::mode1_int)) {
         interrupts->set_interrupt(Interrupt::LCDSTAT);
     }
-    // refresh_maps();
+    refresh_maps();
 }
 
 void Ppu::oam_search(void)
@@ -238,9 +238,74 @@ void Ppu::pixel_transfer(void)
     }
 }
 
+void Ppu::refresh_maps(void)
+{
+    bool use_8000_method = utility::bitwise::is_bit_set(lcdc, LcdcBits::bg_win_tiledata);
+    u16 bg_win_vram_base_addr = use_8000_method ? 0 : 0x1000;
+
+    // Background map
+    u16 bg_tilemap_base_addr = 0x1800;
+    if (utility::bitwise::is_bit_set(lcdc, LcdcBits::bg_tilemap)) {
+        bg_tilemap_base_addr += 0x400;
+    }
+
+    for (int i = 0; i < 32; i++) {
+        for (int j = 0; j < 32; j++) {
+            int tilemap_num = i * 32 + j;
+            int tilemap_idx = tilemap_num + bg_tilemap_base_addr;
+            u8 tile_idx = vram[tilemap_idx];
+            int tile_addr;
+            if (use_8000_method) {
+                tile_addr = tile_idx * 16 + bg_win_vram_base_addr;
+            } else {
+                tile_addr = static_cast<i8>(tile_idx) * 16 + bg_win_vram_base_addr;
+            }
+            for (int k = 0; k < 8; k++) {
+                u8 tile_row_hi = vram[tile_addr + 1];
+                u8 tile_row_lo = vram[tile_addr];
+                for (int l = 0; l < 8; l++) {
+                    u8 hi_bit = utility::bitwise::get_bit(&tile_row_hi, 7 - l);
+                    u8 lo_bit = utility::bitwise::get_bit(&tile_row_lo, 7 - l);
+                    bg_map[i * 8 + k][j * 8 + l] = (hi_bit << 1) | lo_bit;
+                }
+                tile_addr += 2;
+            }
+        }
+    }
+
+    // Window map
+    u16 win_tilemap_base_addr = 0x1800;
+    if (utility::bitwise::is_bit_set(lcdc, LcdcBits::win_tilemap)) {
+        win_tilemap_base_addr += 0x400;
+    }
+
+    for (int i = 0; i < 32; i++) {
+        for (int j = 0; j < 32; j++) {
+            int tilemap_num = i * 32 + j;
+            int tilemap_idx = tilemap_num + win_tilemap_base_addr;
+            u8 tile_idx = vram[tilemap_idx];
+            int tile_addr;
+            if (use_8000_method) {
+                tile_addr = tile_idx * 16 + bg_win_vram_base_addr;
+            } else {
+                tile_addr = static_cast<i8>(tile_idx) * 16 + bg_win_vram_base_addr;
+            }
+            for (int k = 0; k < 8; k++) {
+                u8 tile_row_hi = vram[tile_addr + 1];
+                u8 tile_row_lo = vram[tile_addr];
+                for (int l = 0; l < 8; l++) {
+                    u8 hi_bit = utility::bitwise::get_bit(&tile_row_hi, 7 - l);
+                    u8 lo_bit = utility::bitwise::get_bit(&tile_row_lo, 7 - l);
+                    win_map[i * 8 + k][j * 8 + l] = (hi_bit << 1) | lo_bit;
+                }
+                tile_addr += 2;
+            }
+        }
+    }
+}
+
 void Ppu::step(u32 cycles)
 {
-    // PPU State Machine
     cycle_count += cycles;
     cycle_count %= PpuConstants::CLOCKS_PER_FRAME;
     PpuMode last_mode = static_cast<PpuMode>(*stat & 0x03);
@@ -309,6 +374,7 @@ bool Ppu::frame_is_ready(void)
 
 u8* Ppu::get_viewport(void)
 {
+    frame_ready = false;
     return reinterpret_cast<u8*>(viewport.data());
 }
 

@@ -88,6 +88,7 @@ private:
     void vblank(void);
     void oam_search(void);
     void pixel_transfer(void);
+    void refresh_maps(void);
     PpuMode calculate_mode(void);
 
 public:

@@ -23,17 +23,24 @@ GameBoy::~GameBoy()
 
 void GameBoy::run(void)
 {
-    // TODO: Add some more conditions that could cuase this loop to stop/pause
-    while (true) {
-        u32 cycles = cpu->step();
-        ppu->step(cycles);
-        timer->tick(cycles);
-    }
+    u32 cycles = cpu->step();
+    ppu->step(cycles);
+    timer->tick(cycles);
 }
 
 void GameBoy::insert_cartridge(Cartridge* c)
 {
     cart = c;
     mem->map_cartridge(cart);
+}
+
+bool GameBoy::frame_ready(void)
+{
+    return ppu->frame_is_ready();
+}
+
+u8* GameBoy::get_frame(void)
+{
+    return ppu->get_viewport();
 }
 };
