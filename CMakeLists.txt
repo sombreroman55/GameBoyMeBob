@@ -57,6 +57,7 @@ target_include_directories(${GBMB_TARGET} PRIVATE
 target_link_libraries(${GBMB_TARGET}
   ${SDL2_LIBRARIES}
   spdlog::spdlog_header_only
+  -lzip
 )
 
 enable_testing()

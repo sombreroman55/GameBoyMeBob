@@ -97,6 +97,8 @@ u8 Mmu::read_byte(u16 addr)
     }
 
     if (utility::in_range(addr, memory_map::video_ram)) {
+        u16 effective_addr = addr - memory_map::video_ram.first;
+        return ppu->read_vram_byte(effective_addr);
     }
 
     if (utility::in_range(addr, memory_map::ext_ram)) {

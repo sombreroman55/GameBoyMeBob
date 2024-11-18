@@ -371,7 +371,6 @@ void Ppu::write_bg_palette(u8 byte)
 
 void Ppu::write_obj0_palette(u8 byte)
 {
-    spdlog::info("Writing {} to obp0", byte);
     for (int i = 0; i < 4; i++) {
         obj0_palette[i] = byte & 0x03;
         byte >>= 2;
@@ -380,7 +379,6 @@ void Ppu::write_obj0_palette(u8 byte)
 
 void Ppu::write_obj1_palette(u8 byte)
 {
-    spdlog::info("Writing {} to obp1", byte);
     for (int i = 0; i < 4; i++) {
         obj1_palette[i] = byte & 0x03;
         byte >>= 2;

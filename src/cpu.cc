@@ -1037,7 +1037,7 @@ u32 Cpu::execute(u8 opcode)
         break;
 
     case 0xD3: // NOT IMPLEMENTED
-        unimplemented();
+        unimplemented(opcode);
         break;
 
     case 0xD4: // call nc, u16
@@ -1085,7 +1085,7 @@ u32 Cpu::execute(u8 opcode)
         break;
 
     case 0xDB: // NOT IMPLEMENTED
-        unimplemented();
+        unimplemented(opcode);
         break;
 
     case 0xDC: // call c, u16
@@ -1099,7 +1099,7 @@ u32 Cpu::execute(u8 opcode)
         break;
 
     case 0xDD: // NOT IMPLEMENTED
-        unimplemented();
+        unimplemented(opcode);
         break;
 
     case 0xDE: // sbc a, u8
@@ -1125,11 +1125,11 @@ u32 Cpu::execute(u8 opcode)
         break;
 
     case 0xE3: // NOT IMPLEMENTED
-        unimplemented();
+        unimplemented(opcode);
         break;
 
     case 0xE4: // NOT IMPLEMENTED
-        unimplemented();
+        unimplemented(opcode);
         break;
 
     case 0xE5: // push hl
@@ -1161,15 +1161,15 @@ u32 Cpu::execute(u8 opcode)
         break;
 
     case 0xEB: // NOT IMPLEMENTED
-        unimplemented();
+        unimplemented(opcode);
         break;
 
     case 0xEC: // NOT IMPLEMENTED
-        unimplemented();
+        unimplemented(opcode);
         break;
 
     case 0xED: // NOT IMPLEMENTED
-        unimplemented();
+        unimplemented(opcode);
         break;
 
     case 0xEE: // xor a, u8
@@ -1200,7 +1200,7 @@ u32 Cpu::execute(u8 opcode)
         break;
 
     case 0xF4: // NOT IMPLEMENTED
-        unimplemented();
+        unimplemented(opcode);
         break;
 
     case 0xF5: // push af
@@ -1238,11 +1238,11 @@ u32 Cpu::execute(u8 opcode)
         break;
 
     case 0xFC: // should crash gb
-        unimplemented();
+        unimplemented(opcode);
         break;
 
     case 0xFD: // should crash gb
-        unimplemented();
+        unimplemented(opcode);
         break;
 
     case 0xFE: // cp a, u8
@@ -1432,9 +1432,9 @@ void Cpu::ldhl(i8 val)
     reg->set_flag(Flag::ZERO, false);
 }
 
-void Cpu::unimplemented(void)
+void Cpu::unimplemented(u8 opcode)
 {
-    spdlog::error("This opcode is unimplemented on the Game Boy hardware!");
+    spdlog::error("Opcode {:02X} is unimplemented on the Game Boy hardware!", opcode);
 }
 
 // CB opcodes

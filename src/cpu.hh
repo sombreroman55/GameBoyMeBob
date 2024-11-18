@@ -29,7 +29,7 @@ private:
     // Misc stuff
     void daa();
     void ldhl(i8 val);
-    void unimplemented();
+    void unimplemented(u8 opcode);
 
     // CB opcodes
     void rlc(u8* r);
