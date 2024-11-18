@@ -55,36 +55,43 @@ void Joypad::release_button(Button button)
 
 u8 Joypad::read_buttons(void)
 {
-    return (0xF0 | ((button_gates >> 4) & 0x0F));
+    return (button_gates >> 4) & 0x0F;
 }
 
 u8 Joypad::read_directions(void)
 {
-    return (0xF0 | (button_gates & 0x0F));
+    return button_gates & 0x0F;
 }
 
 void Joypad::write_button_register(u8 b)
 {
-    *joyp &= ~(b & 0x30);
+    u8 copy = *joyp & 0x0F;
+    u8 work = b >> 4;
+    u8 res = (work << 4) | copy;
+    *joyp = res;
 }
 
 u8 Joypad::read_button_register(void)
 {
     u8 select_state = (*joyp & 0x30) >> 4;
+    u8 buttons = 0x0F;
     switch (select_state) {
     case 0x00: // both selected
-        *joyp &= (read_buttons() | read_directions());
+        buttons = (read_buttons() | read_directions());
         break;
     case 0x01: // buttons
-        *joyp &= read_buttons();
+        buttons = read_buttons();
         break;
     case 0x02: // dirs
-        *joyp &= read_directions();
+        buttons = read_directions();
         break;
     case 0x03: // none selected
-        *joyp |= 0x0F;
+        buttons = 0x0F;
         break;
     }
+    u8 copy = *joyp & 0xF0;
+    u8 res = copy | buttons;
+    *joyp = res;
     return *joyp;
 }
 };

@@ -61,8 +61,14 @@ private:
     std::array<std::array<u8, 256>, 256> win_map = {};
     std::array<std::array<u8, 160>, 144> viewport = {};
 
+    // Palettes
+    std::array<u8, 4> bg_palette = {};
+    std::array<u8, 4> obj0_palette = {};
+    std::array<u8, 4> obj1_palette = {};
+
     // Stores the index of the visible sprite in OAM
-    std::vector<int> visible_sprites;
+    std::array<int,10> visible_sprites;
+    int num_sprites = 0;
 
     Mmu* mem;
     InterruptController* interrupts;
@@ -102,6 +108,11 @@ public:
     void write_vram_byte(u16 addr, u8 byte);
     u8 read_oam_ram_byte(u16 addr);
     void write_oam_ram_byte(u16 addr, u8 byte);
+
+    // Update palettes
+    void write_bg_palette(u8 byte);
+    void write_obj0_palette(u8 byte);
+    void write_obj1_palette(u8 byte);
 
     bool frame_is_ready(void);
 

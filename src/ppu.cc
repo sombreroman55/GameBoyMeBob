@@ -31,8 +31,10 @@ Ppu::Ppu(Mmu* mmu, InterruptController* ic)
     *obp1 = 0x00;
     *wy = 0x00;
     *wx = 0x00;
+    write_bg_palette(*bgp);
+    write_obj0_palette(*obp0);
+    write_obj1_palette(*obp1);
     mem->map_ppu(this);
-    visible_sprites.reserve(10);
 }
 
 Ppu::~Ppu() { }
@@ -89,7 +91,7 @@ void Ppu::vblank(void)
 
 void Ppu::oam_search(void)
 {
-    visible_sprites.clear();
+    num_sprites = 0;
 
     if (utility::bitwise::is_bit_set(stat, StatBits::mode2_int)) {
         interrupts->set_interrupt(Interrupt::LCDSTAT);
@@ -102,12 +104,12 @@ void Ppu::oam_search(void)
     bool double_size = utility::bitwise::is_bit_set(lcdc, LcdcBits::obj_size);
     int h = double_size ? 16 : 8;
 
-    for (int i = 0, j = 0; i < 40 && j < 10; i += (1 + double_size)) {
-        u8 objy = oam_ram[i + 0];
-        u8 objx = oam_ram[i + 1];
+    for (int i = 0; i < 40 && num_sprites < 10; i += (1 + double_size)) {
+        u8 objy = oam_ram[(i*4) + 0];
+        u8 objx = oam_ram[(i*4) + 1];
 
         if (objx != 0 && objy <= *ly + 16 && *ly + 16 < objy + h) {
-            visible_sprites[j++] = i;
+            visible_sprites[num_sprites++] = (i*4);
         }
     }
 }
@@ -142,10 +144,10 @@ void Ppu::pixel_transfer(void)
     }
 
     // Sprites (only do this work if there are sprites to draw)
-    if (!visible_sprites.empty()) {
+    if (num_sprites) {
         for (int p = 0; p < 160; p++) {
             // Check if pixel is within sprite
-            for (int i = 0; i < visible_sprites.size(); i++) {
+            for (int i = 0; i < num_sprites; i++) {
                 u8 objy = oam_ram[visible_sprites[i] + 0];
                 u8 objx = oam_ram[visible_sprites[i] + 1];
                 u8 tile = oam_ram[visible_sprites[i] + 2];
@@ -154,7 +156,7 @@ void Ppu::pixel_transfer(void)
                 if (objx == p) {
                     // Overlay the 8 pixels needed onto the pixel buffer
                     int height = utility::bitwise::is_bit_set(lcdc, LcdcBits::obj_size) ? 16 : 8;
-                    std::vector<u8> tile_rows(height, 0);
+                    std::vector<u16> tile_rows(height);
                     int tile_addr = tile * 16;
                     for (int i = 0; i < height; i++) {
                         tile_rows[i] = vram[tile_addr + 1] << 8 | vram[tile_addr];
@@ -168,7 +170,7 @@ void Ppu::pixel_transfer(void)
                     int curr_row = (*ly + 16) - objy;
                     u16 pixel_row = tile_rows[curr_row];
 
-                    u8 pixel_data[8] = { 0 };
+                    std::vector<u8> pixel_data(8);
                     u8 hi_byte = ((pixel_row >> 8) & 0xFF);
                     u8 lo_byte = (pixel_row & 0xFF);
                     for (int i = 0; i < 8; i++) {
@@ -178,52 +180,34 @@ void Ppu::pixel_transfer(void)
                     }
 
                     if (utility::bitwise::is_bit_set(&flag, ObjFlags::x_flip)) {
-                        std::reverse(pixel_data, pixel_data + 8);
+                        std::reverse(pixel_data.begin(), pixel_data.end());
                     }
 
-                    u16 obj_palette = (utility::bitwise::is_bit_set(&flag, ObjFlags::dmg_pal) ? 2 : 3);
+                    u16 obj_palette = (utility::bitwise::is_bit_set(&flag, ObjFlags::dmg_pal) ? 3 : 2);
 
-                    for (int j = 0; j < 8 && p + j < 160; j++) {
+                    int x = objx - 8;
+                    for (int j = 0; j < 8; j++) {
+                        int pos = x + j;
+                        if (pos < 0 || pos >= 160)
+                            continue;
                         // Skip transparent pixels
                         if (pixel_data[j] == 0x00)
                             continue;
-                        if (pixels[p + j].palette_source < 2) {
+                        if (pixels[pos].palette_source < 2) {
                             if (utility::bitwise::is_bit_set(&flag, ObjFlags::priority)) {
-                                if (pixels[p + j].palette_idx == 0x00) {
-                                    pixels[p + j].palette_idx = pixel_data[j];
-                                    pixels[p + j].palette_source = obj_palette;
+                                if (pixels[pos].palette_idx == 0x00) {
+                                    pixels[pos].palette_idx = pixel_data[j];
+                                    pixels[pos].palette_source = obj_palette;
                                 }
                             } else {
-                                pixels[p + j].palette_idx = pixel_data[j];
-                                pixels[p + j].palette_source = obj_palette;
+                                pixels[pos].palette_idx = pixel_data[j];
+                                pixels[pos].palette_source = obj_palette;
                             }
                         }
                     }
                 }
             }
         }
-    }
-
-    // TODO: Clean this up, this is ugly
-    u8 bg_palette[4] = { 0 };
-    u8 bgp_copy = *bgp;
-    for (int i = 0; i < 4; i++) {
-        bg_palette[i] = bgp_copy & 0x03;
-        bgp_copy >>= 2;
-    }
-
-    u8 obj0_palette[4] = { 0 };
-    u8 obj0_copy = *obp0;
-    for (int i = 0; i < 4; i++) {
-        obj0_palette[i] = obj0_copy & 0x03;
-        obj0_copy >>= 2;
-    }
-
-    u8 obj1_palette[4] = { 0 };
-    u8 obj1_copy = *obp1;
-    for (int i = 0; i < 4; i++) {
-        obj1_palette[i] = obj1_copy & 0x03;
-        obj1_copy >>= 2;
     }
 
     for (int p = 0; p < 160; p++) {
@@ -349,8 +333,10 @@ void Ppu::step(u32 cycles)
         }
 
         // Store new mode back to stat
-        *stat &= ~(0x03);
-        *stat |= static_cast<u8>(mode);
+        u8 copy = *stat;
+        copy &= ~(0x03);
+        copy |= static_cast<u8>(mode);
+        *stat = copy;
     }
 }
 
@@ -373,6 +359,32 @@ u8 Ppu::read_oam_ram_byte(u16 addr)
 void Ppu::write_oam_ram_byte(u16 addr, u8 byte)
 {
     oam_ram[addr] = byte;
+}
+
+void Ppu::write_bg_palette(u8 byte)
+{
+    for (int i = 0; i < 4; i++) {
+        bg_palette[i] = byte & 0x03;
+        byte >>= 2;
+    }
+}
+
+void Ppu::write_obj0_palette(u8 byte)
+{
+    spdlog::info("Writing {} to obp0", byte);
+    for (int i = 0; i < 4; i++) {
+        obj0_palette[i] = byte & 0x03;
+        byte >>= 2;
+    }
+}
+
+void Ppu::write_obj1_palette(u8 byte)
+{
+    spdlog::info("Writing {} to obp1", byte);
+    for (int i = 0; i < 4; i++) {
+        obj1_palette[i] = byte & 0x03;
+        byte >>= 2;
+    }
 }
 
 bool Ppu::frame_is_ready(void)

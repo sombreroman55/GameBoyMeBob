@@ -39,6 +39,18 @@ void Mmu::write_io_byte(u16 addr, u8 byte)
             ppu->write_oam_ram_byte(i, read_byte((byte << 8)+i));
         }
         break;
+    case IoRegisters::bgp:
+        ppu->write_bg_palette(byte);
+        memory[addr] = byte; // still write it back to memory too
+        break;
+    case IoRegisters::obp0:
+        ppu->write_obj0_palette(byte);
+        memory[addr] = byte; // still write it back to memory too
+        break;
+    case IoRegisters::obp1:
+        ppu->write_obj1_palette(byte);
+        memory[addr] = byte; // still write it back to memory too
+        break;
     case IoRegisters::div:
         timer->reset_div();
         break;
@@ -101,6 +113,8 @@ u8 Mmu::read_byte(u16 addr)
     }
 
     if (utility::in_range(addr, memory_map::oam_ram)) {
+        u16 effective_addr = addr - memory_map::oam_ram.first;
+        return ppu->read_oam_ram_byte(effective_addr);
     }
 
     if (utility::in_range(addr, memory_map::prohibited)) {
