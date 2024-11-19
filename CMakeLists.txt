@@ -14,7 +14,31 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -ggdb")
 set(BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 find_package(spdlog REQUIRED)
+
+set(OpenGL_GL_PREFERENCE GLVND)
+find_package(OpenGL REQUIRED)
 find_package(SDL2 REQUIRED)
+
+if (CMAKE_SYSTEM_NAME STREQUAL Linux)
+  find_package(X11 REQUIRED)
+
+  if (NOT X11_Xi_FOUND)
+    message(FATAL_ERROR "X11 Xi library is required")
+  endif ()
+endif ()
+
+set(IMGUI_SRCS
+  # Main imgui files
+  ${BASE_DIR}/third-party/imgui/imgui.cpp
+  ${BASE_DIR}/third-party/imgui/imgui_demo.cpp
+  ${BASE_DIR}/third-party/imgui/imgui_draw.cpp
+  ${BASE_DIR}/third-party/imgui/imgui_tables.cpp
+  ${BASE_DIR}/third-party/imgui/imgui_widgets.cpp
+
+  # Imgui backend files
+  ${BASE_DIR}/third-party/imgui/backends/imgui_impl_sdl2.cpp
+  ${BASE_DIR}/third-party/imgui/backends/imgui_impl_opengl3.cpp
+)
 
 set(GBMB_SRCS
   # Core files
@@ -40,10 +64,8 @@ set(GBMB_SRCS
 )
 
 add_executable(${GBMB_TARGET}
+  ${IMGUI_SRCS}
   ${GBMB_SRCS}
-  # Emulator files
-
-  # Frontend files
 
   # Main ile
   ${BASE_DIR}/main.cc
@@ -51,11 +73,16 @@ add_executable(${GBMB_TARGET}
 
 target_include_directories(${GBMB_TARGET} PRIVATE
   ${BASE_DIR}/src
+  ${BASE_DIR}/third-party/imgui
+  ${BASE_DIR}/third-party/imgui/backends
+  ${BASE_DIR}/third-party/imgui_club/imgui_memory_editor
+  ${OPENGL_INCLUDE_DIRS}
   ${SDL2_INCLUDE_DIRS}
 )
 
 target_link_libraries(${GBMB_TARGET}
   ${SDL2_LIBRARIES}
+  ${OPENGL_LIBRARIES}
   spdlog::spdlog_header_only
   -lzip
 )

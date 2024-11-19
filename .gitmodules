@@ -1,3 +1,6 @@
 [submodule "third-party/imgui"]
 	path = third-party/imgui
 	url = git@github.com:ocornut/imgui.git
+[submodule "third-party/imgui_club"]
+	path = third-party/imgui_club
+	url = git@github.com:ocornut/imgui_club.git
