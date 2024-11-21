@@ -33,5 +33,11 @@ public:
 
     void press_button(Button button);
     void release_button(Button button);
+
+    // Debug API
+    u8* get_memory(void);
+    u8* get_vram(void);
+    u8* get_oam_ram(void);
+    Cpu* get_cpu(void);
 };
 };

@@ -55,4 +55,26 @@ void GameBoy::release_button(Button button)
 {
     joypad->release_button(button);
 }
+
+// Debug API
+u8* GameBoy::get_memory(void)
+{
+    return mem->memory.data();
+}
+
+u8* GameBoy::get_vram(void)
+{
+    return ppu->get_vram();
+}
+
+u8* GameBoy::get_oam_ram(void)
+{
+    return ppu->get_oam_ram();
+}
+
+Cpu* GameBoy::get_cpu(void)
+{
+    return cpu;
+}
+
 };

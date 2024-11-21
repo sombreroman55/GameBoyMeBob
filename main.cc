@@ -22,19 +22,111 @@
 
 #include "cartridge.hh"
 #include "gb.hh"
-#include <iostream>
 using namespace gameboymebob;
 
 // Globals so we can easily inspect them
 Cartridge* cart = nullptr;
 GameBoy* gb = nullptr;
 
+//                        #9BBC0F,    #8BAC0F,    #306230,    #0F380F,    #11DDAA
+uint32_t colors[5] = { 0xFF9BBC0F, 0xFF8BAC0F, 0xFF306230, 0xFF0F380F, 0xFF11DDAA };
+
+constexpr int FRAMERATE_MS = 1000 / 60;
+constexpr int SCREEN_HEIGHT = 144;
+constexpr int SCREEN_WIDTH = 160;
+
+void draw_viewport(void)
+{
+    // Need to get frame no matter what to reset frame ready flag
+    u8* frame = gb->get_frame();
+    static bool show_viewport = true;
+    if (show_viewport) {
+        // map values to colors
+        u32 pixels[SCREEN_HEIGHT * SCREEN_WIDTH];
+        for (int i = 0; i < SCREEN_HEIGHT; i++) {
+            for (int j = 0; j < SCREEN_WIDTH; j++) {
+                pixels[i * SCREEN_WIDTH + j] = colors[frame[i * SCREEN_WIDTH + j]];
+            }
+        }
+
+        // render colors to texture
+        // Create a OpenGL texture identifier
+        static GLuint image_texture;
+        glGenTextures(1, &image_texture);
+        glBindTexture(GL_TEXTURE_2D, image_texture);
+
+        // Setup filtering parameters for display
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        // Upload pixels into texture
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_BGRA, GL_UNSIGNED_BYTE, pixels);
+
+        // render texture to window
+        ImGui::Begin(cart->header.title.c_str(), &show_viewport);
+        ImGui::Image((ImTextureID)(intptr_t)image_texture, ImVec2(SCREEN_WIDTH, SCREEN_HEIGHT));
+        ImGui::End();
+    }
+}
+
+void draw_background(void)
+{
+    static bool draw_background = false;
+    if (draw_background) {
+    }
+}
+
+void draw_tile_data(void)
+{
+    static bool show_tile_data = false;
+    if (show_tile_data) {
+    }
+}
+
+void draw_cpu(void)
+{
+    static bool show_cpu = false;
+    if (show_cpu) {
+        Cpu* cpu = gb->get_cpu();
+    }
+}
+
 void draw_memory(void)
 {
     static bool show_memory = false;
     static MemoryEditor mem_editor;
     if (show_memory) {
-        // mem_editor.DrawWindow("Memory", gb->get_memory(), 0x10000);
+        mem_editor.DrawWindow("Memory", gb->get_memory(), 0x10000);
+    }
+}
+
+void draw_vram(void)
+{
+    static bool show_vram = false;
+    static MemoryEditor vram_editor;
+    if (show_vram) {
+        vram_editor.DrawWindow("VRAM", gb->get_vram(), 0x2000);
+    }
+}
+
+void draw_oam_ram(void)
+{
+    static bool show_oam_ram = false;
+    if (show_oam_ram) {
+        // u8* vram = gb->get_vram();
+        u8* oam = gb->get_oam_ram();
+        ImGui::Begin("OAM", &show_oam_ram);
+        for (int i = 0; i < 40; i++) {
+            int idx = i*4;
+            uint8_t ypos = oam[idx+0];
+            uint8_t xpos = oam[idx+1];
+            uint8_t tile = oam[idx+2];
+            uint8_t flag = oam[idx+3];
+            char buf[64];
+            ImGui::Text("Y: %3d | X: %3d | T: %3d", ypos, xpos, tile);
+        }
+        ImGui::End();
     }
 }
 
@@ -123,7 +215,13 @@ int main(int argc, char* argv[])
     // ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, nullptr, io.Fonts->GetGlyphRangesJapanese());
     // IM_ASSERT(font != nullptr);
 
+    std::chrono::steady_clock::time_point frame_start;
+    std::chrono::steady_clock::time_point frame_end;
+
     gb = new GameBoy();
+    std::string rom_file(argv[1]);
+    cart = new Cartridge(rom_file);
+    gb->insert_cartridge(cart);
 
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
@@ -157,10 +255,48 @@ int main(int argc, char* argv[])
             continue;
         }
 
+        // handle input
+        if (ImGui::IsKeyPressed(ImGuiKey_RightArrow)) gb->press_button(Button::Right);
+        if (ImGui::IsKeyPressed(ImGuiKey_LeftArrow)) gb->press_button(Button::Left);
+        if (ImGui::IsKeyPressed(ImGuiKey_UpArrow)) gb->press_button(Button::Up);
+        if (ImGui::IsKeyPressed(ImGuiKey_DownArrow)) gb->press_button(Button::Down);
+        if (ImGui::IsKeyPressed(ImGuiKey_Z)) gb->press_button(Button::B);
+        if (ImGui::IsKeyPressed(ImGuiKey_X)) gb->press_button(Button::A);
+        if (ImGui::IsKeyPressed(ImGuiKey_Enter)) gb->press_button(Button::Start);
+        if (ImGui::IsKeyPressed(ImGuiKey_Backspace)) gb->press_button(Button::Select);
+
+        if (ImGui::IsKeyReleased(ImGuiKey_RightArrow)) gb->release_button(Button::Right);
+        if (ImGui::IsKeyReleased(ImGuiKey_LeftArrow)) gb->release_button(Button::Left);
+        if (ImGui::IsKeyReleased(ImGuiKey_UpArrow)) gb->release_button(Button::Up);
+        if (ImGui::IsKeyReleased(ImGuiKey_DownArrow)) gb->release_button(Button::Down);
+        if (ImGui::IsKeyReleased(ImGuiKey_Z)) gb->release_button(Button::B);
+        if (ImGui::IsKeyReleased(ImGuiKey_X)) gb->release_button(Button::A);
+        if (ImGui::IsKeyReleased(ImGuiKey_Enter)) gb->release_button(Button::Start);
+        if (ImGui::IsKeyReleased(ImGuiKey_Backspace)) gb->release_button(Button::Select);
+
+        frame_start = std::chrono::steady_clock::now();
+        while (!gb->frame_ready()) {
+            gb->run();
+        }
+        frame_end = std::chrono::steady_clock::now();
+
+        auto time_spent = std::chrono::duration_cast<std::chrono::milliseconds>(frame_end - frame_start).count();
+        if (time_spent < FRAMERATE_MS) {
+            uint32_t sleep_ms = FRAMERATE_MS - time_spent;
+            SDL_Delay(sleep_ms);
+        }
+
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
+
+        draw_viewport();
+        draw_background();
+        draw_tile_data();
+        draw_memory();
+        draw_vram();
+        draw_oam_ram();
 
         // Rendering
         ImGui::Render();
