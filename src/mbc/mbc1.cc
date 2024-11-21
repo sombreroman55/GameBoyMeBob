@@ -2,14 +2,13 @@
 #include "cartridge.hh"
 #include "mbc/mbc.hh"
 #include "utils/util.hh"
-#include <algorithm>
 
 namespace gameboymebob {
 
 Mbc1::Mbc1(Cartridge* c)
     : MbcInterface(c)
 {
-    //spdlog::set_level(spdlog::level::debug);
+    // spdlog::set_level(spdlog::level::debug);
 }
 
 u8 Mbc1::read_byte(u16 addr)
@@ -22,6 +21,7 @@ u8 Mbc1::read_byte(u16 addr)
     } else if (utility::in_range(addr, mbc1_read_map::rom_bank_N)) {
         effective_addr = 0x4000 * high_bank + (addr - 0x4000);
     } else if (utility::in_range(addr, mbc1_read_map::ram)) {
+        spdlog::debug("Reading address {:X}", addr);
         if (ram_enabled) {
             if (cart->header.ram_size == 0x800 || cart->header.ram_size == 0x2000) {
                 effective_addr = (addr - 0xA000) % cart->header.ram_size;
@@ -34,6 +34,7 @@ u8 Mbc1::read_byte(u16 addr)
             }
             return cart->ram[effective_addr];
         } else {
+            spdlog::debug("Reading external RAM? Why?");
             return 0xFF; // return junk
         }
     }
@@ -43,7 +44,7 @@ u8 Mbc1::read_byte(u16 addr)
 void Mbc1::write_byte(u16 addr, u8 byte)
 {
     if (utility::in_range(addr, mbc1_write_map::enable_ram)) {
-        spdlog::debug("Writing {:02X} to ram_enable", byte);
+        spdlog::info("Writing {:02X} to ram_enable", byte);
         ram_enabled = (cart->header.ram_size > 0 && (byte & 0x0F) == 0x0A);
     } else if (utility::in_range(addr, mbc1_write_map::rom_bank_select)) {
         switch (cart->header.rom_size) {
@@ -78,9 +79,8 @@ void Mbc1::write_byte(u16 addr, u8 byte)
         default:
             break;
         }
-        rom_bank = std::max(rom_bank, (u8)1);
-        high_bank = std::max(high_bank, (u8)1);
-        spdlog::debug("High bank: {}, ROM bank: {}", high_bank, rom_bank);
+        rom_bank = rom_bank ? rom_bank : 1;
+        high_bank = high_bank ? high_bank : 1;
     } else if (utility::in_range(addr, mbc1_write_map::ram_bank_select)) {
         spdlog::debug("Writing {:02X} to ram_bank_select", byte);
         ram_bank = (byte & 0x03);
@@ -88,6 +88,7 @@ void Mbc1::write_byte(u16 addr, u8 byte)
         spdlog::debug("Writing {:02X} to mode_select", byte);
         mode = (byte & 0x01);
     } else if (utility::in_range(addr, mbc1_write_map::ram)) {
+        spdlog::debug("Writing {:02X} to RAM address {:X}, but why?", byte, addr);
         if (ram_enabled) {
             u32 effective_addr = addr;
             if (cart->header.ram_size == 0x800 || cart->header.ram_size == 0x2000) {

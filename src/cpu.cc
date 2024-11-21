@@ -39,7 +39,7 @@ u32 Cpu::step(void)
 {
     u32 cycles_consumed = 1;
     // if (stopped) {
-        // return cycles_consumed;
+    // return cycles_consumed;
     // }
     // TBD: Do we want to "implement" stopping?
 
@@ -79,14 +79,14 @@ u32 Cpu::step(void)
     } else {
         /*
         printf("%02X", opcode);
-        for (int i = 0; i < instructions[opcode].size-1; i++) {
-            printf(" %02X", mem->read_byte(reg->pc+i));
+        for (int i = 0; i < instructions[opcode].size - 1; i++) {
+            printf(" %02X", mem->read_byte(reg->pc + i));
         }
         printf("\n");
+        reg->print_registers();
         */
         cycles_consumed = execute(opcode);
     }
-    // reg->print_registers();
 
     if (halt_bug) {
         reg->pc--;
@@ -1279,7 +1279,7 @@ void Cpu::dec(u8* r)
 
 void Cpu::add(u8 val)
 {
-    uint16_t result = reg->a + val;
+    u16 result = reg->a + val;
 
     reg->set_flag(Flag::CARRY, result > 0xFF);
     reg->set_flag(Flag::HALF, ((reg->a & 0x0F) + (val & 0x0F)) > 0x0F);
@@ -1293,20 +1293,20 @@ void Cpu::add(u8 val)
 void Cpu::adc(u8 val)
 {
     int carry = reg->flag_is_set(Flag::CARRY) ? 1 : 0;
-    int result = reg->a + val + carry;
+    u16 result = reg->a + val + carry;
 
-    reg->set_flag(Flag::ZERO, !(int8_t)result);
-    reg->set_flag(Flag::CARRY, result > 0xff);
-    reg->set_flag(Flag::HALF, ((reg->a & 0x0F) + (val & 0x0f) + carry) > 0x0F);
+    reg->set_flag(Flag::ZERO, !(result & 0xFF));
+    reg->set_flag(Flag::CARRY, result > 0xFF);
+    reg->set_flag(Flag::HALF, ((reg->a & 0x0F) + (val & 0x0F) + carry) > 0x0F);
     reg->set_flag(Flag::NEG, false);
 
-    reg->a = (int8_t)(result & 0xff);
+    reg->a = result & 0xFF;
 }
 
 void Cpu::sub(u8 val)
 {
     reg->set_flag(Flag::CARRY, val > reg->a);
-    reg->set_flag(Flag::HALF, (val & 0x0f) > (reg->a & 0x0f));
+    reg->set_flag(Flag::HALF, (val & 0x0F) > (reg->a & 0x0F));
 
     reg->a -= val;
 
@@ -1316,12 +1316,12 @@ void Cpu::sub(u8 val)
 
 void Cpu::sbc(u8 val)
 {
-    bool is_carry = reg->flag_is_set(Flag::CARRY);
+    int carry = reg->flag_is_set(Flag::CARRY) ? 1 : 0;
 
-    reg->set_flag(Flag::CARRY, (val + is_carry) > reg->a);
-    reg->set_flag(Flag::HALF, ((val & 0x0f) + is_carry) > (reg->a & 0x0f));
+    reg->set_flag(Flag::CARRY, (val + carry) > reg->a);
+    reg->set_flag(Flag::HALF, ((val & 0x0F) + carry) > (reg->a & 0x0F));
 
-    reg->a -= (val + is_carry);
+    reg->a -= (val + carry);
 
     reg->set_flag(Flag::ZERO, !reg->a);
     reg->set_flag(Flag::NEG, true);
@@ -1356,9 +1356,9 @@ void Cpu::_or(u8 val)
 
 void Cpu::cp(u8 val)
 {
-    uint8_t temp_val = reg->a;
+    u8 temp_val = reg->a;
     reg->set_flag(Flag::CARRY, val > temp_val);
-    reg->set_flag(Flag::HALF, (val & 0x0f) > (temp_val & 0x0f));
+    reg->set_flag(Flag::HALF, (val & 0x0F) > (temp_val & 0x0F));
 
     temp_val -= val;
 
@@ -1421,7 +1421,7 @@ void Cpu::daa(void)
 
 void Cpu::ldhl(i8 val)
 {
-    uint16_t result = reg->sp + val;
+    u16 result = reg->sp + val;
 
     reg->set_flag(Flag::CARRY, ((reg->sp ^ val ^ result) & 0x100) == 0x100);
     reg->set_flag(Flag::HALF, ((reg->sp ^ val ^ result) & 0x10) == 0x10);

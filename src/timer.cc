@@ -4,15 +4,16 @@ namespace gameboymebob {
 Timer::Timer(Mmu* mmu, InterruptController* ic)
     : mem(mmu)
     , interrupts(ic)
-    , div(&mmu->memory[IoRegisters::div])
-    , tima(&mmu->memory[IoRegisters::tima])
-    , tma(&mmu->memory[IoRegisters::tma])
-    , tac(&mmu->memory[IoRegisters::tac])
+    , div(&mem->memory[IoRegisters::div])
+    , tima(&mem->memory[IoRegisters::tima])
+    , tma(&mem->memory[IoRegisters::tma])
+    , tac(&mem->memory[IoRegisters::tac])
 {
-    *div = 0x18;
+    *div = 0xAB;
     *tima = 0x00;
     *tma = 0x00;
     *tac = 0xF8;
+    counter = (*div << 6);
     mem->map_timer(this);
 }
 

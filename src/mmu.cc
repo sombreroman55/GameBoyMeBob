@@ -7,7 +7,9 @@
 #include <unistd.h>
 
 namespace gameboymebob {
-Mmu::Mmu() { }
+Mmu::Mmu() {
+    memory[0xFF03] = 0xFF;
+}
 Mmu::~Mmu() { }
 
 u8 Mmu::read_io_byte(u16 addr)

@@ -3,7 +3,6 @@
 #include "mbc/mbc.hh"
 #include "utils/util.hh"
 #include <cstdio>
-#include <fstream>
 #include <string>
 #include <unordered_map>
 
@@ -226,7 +225,8 @@ const std::unordered_map<std::string, std::string> new_licensees = {
     { "9H", "Bottom Up" },
     { "A4", "Konami (Yu-Gi-Oh!)" },
     { "BL", "MTO" },
-    { "DK", "Kodansha" }
+    { "DK", "Kodansha" },
+    { "ZZ", "Mooneye" }
 };
 
 const std::unordered_map<u8, std::string> cartridge_types = {

@@ -34,6 +34,8 @@ void GameBoy::insert_cartridge(Cartridge* c)
 {
     cart = c;
     mem->map_cartridge(cart);
+    cpu->reg->set_flag(Flag::HALF, (c->header.checksum == 0x00));
+    cpu->reg->set_flag(Flag::CARRY, (c->header.checksum == 0x00));
 }
 
 bool GameBoy::frame_ready(void)

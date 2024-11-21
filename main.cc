@@ -64,7 +64,11 @@ void draw_viewport(void)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_BGRA, GL_UNSIGNED_BYTE, pixels);
 
         // render texture to window
-        ImGui::Begin(cart->header.title.c_str(), &show_viewport);
+        const char* title = cart->header.title.c_str();
+        if (!title || title[0] == '\0') {
+            title = "Viewport";
+        }
+        ImGui::Begin(title, &show_viewport);
         ImGui::Image((ImTextureID)(intptr_t)image_texture, ImVec2(SCREEN_WIDTH, SCREEN_HEIGHT));
         ImGui::End();
     }
@@ -94,7 +98,7 @@ void draw_cpu(void)
 
 void draw_memory(void)
 {
-    static bool show_memory = false;
+    static bool show_memory = true;
     static MemoryEditor mem_editor;
     if (show_memory) {
         mem_editor.DrawWindow("Memory", gb->get_memory(), 0x10000);

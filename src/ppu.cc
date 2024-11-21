@@ -235,7 +235,7 @@ void Ppu::refresh_maps(void)
     // Background map
     u16 bg_tilemap_base_addr = 0x1800;
     if (utility::bitwise::is_bit_set(lcdc, LcdcBits::bg_tilemap)) {
-        bg_tilemap_base_addr += 0x400;
+        bg_tilemap_base_addr = 0x1C00;
     }
 
     for (int i = 0; i < 32; i++) {
@@ -265,7 +265,7 @@ void Ppu::refresh_maps(void)
     // Window map
     u16 win_tilemap_base_addr = 0x1800;
     if (utility::bitwise::is_bit_set(lcdc, LcdcBits::win_tilemap)) {
-        win_tilemap_base_addr += 0x400;
+        win_tilemap_base_addr = 0x1C00;
     }
 
     for (int i = 0; i < 32; i++) {
