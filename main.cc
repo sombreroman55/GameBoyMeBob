@@ -40,19 +40,25 @@ void draw_viewport(void)
     // Need to get frame no matter what to reset frame ready flag
     u8* frame = gb->get_frame();
     static bool show_viewport = true;
+    static int scale = 1;
+    static GLuint image_texture = 0;
     if (show_viewport) {
         // map values to colors
-        u32 pixels[SCREEN_HEIGHT * SCREEN_WIDTH];
-        for (int i = 0; i < SCREEN_HEIGHT; i++) {
-            for (int j = 0; j < SCREEN_WIDTH; j++) {
-                pixels[i * SCREEN_WIDTH + j] = colors[frame[i * SCREEN_WIDTH + j]];
+        int scaled_width = SCREEN_WIDTH * scale;
+        int scaled_height = SCREEN_HEIGHT * scale;
+        u32 pixels[scaled_height * scaled_width];
+        for (int i = 0; i < scaled_height; i++) {
+            for (int j = 0; j < scaled_width; j++) {
+                pixels[i * scaled_width + j] = colors[frame[(i/scale) * SCREEN_WIDTH + (j/scale)]];
             }
         }
 
         // render colors to texture
         // Create a OpenGL texture identifier
-        static GLuint image_texture;
-        glGenTextures(1, &image_texture);
+        GLuint image_texture;
+        if (image_texture == 0) {
+            glGenTextures(1, &image_texture);
+        }
         glBindTexture(GL_TEXTURE_2D, image_texture);
 
         // Setup filtering parameters for display
@@ -61,7 +67,7 @@ void draw_viewport(void)
 
         // Upload pixels into texture
         glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_BGRA, GL_UNSIGNED_BYTE, pixels);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA, scaled_width, scaled_height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pixels);
 
         // render texture to window
         const char* title = cart->header.title.c_str();
@@ -69,7 +75,20 @@ void draw_viewport(void)
             title = "Viewport";
         }
         ImGui::Begin(title, &show_viewport);
-        ImGui::Image((ImTextureID)(intptr_t)image_texture, ImVec2(SCREEN_WIDTH, SCREEN_HEIGHT));
+        if (ImGui::SliderInt("Scale Factor", &scale, 1, 4)) {
+            glDeleteTextures(1, &image_texture);
+            glGenTextures(1, &image_texture);
+            glBindTexture(GL_TEXTURE_2D, image_texture);
+
+            // Setup filtering parameters for display
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+            // Upload pixels into texture
+            glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA, scaled_width, scaled_height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pixels);
+        }
+        ImGui::Image((ImTextureID)(intptr_t)image_texture, ImVec2(scaled_width, scaled_height));
         ImGui::End();
     }
 }
@@ -90,9 +109,22 @@ void draw_tile_data(void)
 
 void draw_cpu(void)
 {
-    static bool show_cpu = false;
+    static bool show_cpu = true;
     if (show_cpu) {
         Cpu* cpu = gb->get_cpu();
+        ImGui::Begin("CPU", &show_cpu);
+        ImGui::Text("A: %02X | F: %02X | AF: %04X)", cpu->reg->a, cpu->reg->f, cpu->reg->af);
+        ImGui::Text("B: %02X | C: %02X | BC: %04X)", cpu->reg->b, cpu->reg->c, cpu->reg->bc);
+        ImGui::Text("D: %02X | E: %02X | DE: %04X)", cpu->reg->d, cpu->reg->e, cpu->reg->de);
+        ImGui::Text("H: %02X | L: %02X | HL: %04X)", cpu->reg->h, cpu->reg->l, cpu->reg->hl);
+        ImGui::Text("SP: %04X", cpu->reg->sp);
+        ImGui::Text("PC: %04X", cpu->reg->pc);
+        ImGui::Text("Z: %d | N: %d | H: %d | C: %d",
+                cpu->reg->flag_is_set(Flag::ZERO),
+                cpu->reg->flag_is_set(Flag::NEG),
+                cpu->reg->flag_is_set(Flag::HALF),
+                cpu->reg->flag_is_set(Flag::CARRY));
+        ImGui::End();
     }
 }
 
@@ -122,11 +154,11 @@ void draw_oam_ram(void)
         u8* oam = gb->get_oam_ram();
         ImGui::Begin("OAM", &show_oam_ram);
         for (int i = 0; i < 40; i++) {
-            int idx = i*4;
-            uint8_t ypos = oam[idx+0];
-            uint8_t xpos = oam[idx+1];
-            uint8_t tile = oam[idx+2];
-            uint8_t flag = oam[idx+3];
+            int idx = i * 4;
+            uint8_t ypos = oam[idx + 0];
+            uint8_t xpos = oam[idx + 1];
+            uint8_t tile = oam[idx + 2];
+            uint8_t flag = oam[idx + 3];
             char buf[64];
             ImGui::Text("Y: %3d | X: %3d | T: %3d", ypos, xpos, tile);
         }
@@ -260,23 +292,39 @@ int main(int argc, char* argv[])
         }
 
         // handle input
-        if (ImGui::IsKeyPressed(ImGuiKey_RightArrow)) gb->press_button(Button::Right);
-        if (ImGui::IsKeyPressed(ImGuiKey_LeftArrow)) gb->press_button(Button::Left);
-        if (ImGui::IsKeyPressed(ImGuiKey_UpArrow)) gb->press_button(Button::Up);
-        if (ImGui::IsKeyPressed(ImGuiKey_DownArrow)) gb->press_button(Button::Down);
-        if (ImGui::IsKeyPressed(ImGuiKey_Z)) gb->press_button(Button::B);
-        if (ImGui::IsKeyPressed(ImGuiKey_X)) gb->press_button(Button::A);
-        if (ImGui::IsKeyPressed(ImGuiKey_Enter)) gb->press_button(Button::Start);
-        if (ImGui::IsKeyPressed(ImGuiKey_Backspace)) gb->press_button(Button::Select);
+        if (ImGui::IsKeyPressed(ImGuiKey_RightArrow))
+            gb->press_button(Button::Right);
+        if (ImGui::IsKeyPressed(ImGuiKey_LeftArrow))
+            gb->press_button(Button::Left);
+        if (ImGui::IsKeyPressed(ImGuiKey_UpArrow))
+            gb->press_button(Button::Up);
+        if (ImGui::IsKeyPressed(ImGuiKey_DownArrow))
+            gb->press_button(Button::Down);
+        if (ImGui::IsKeyPressed(ImGuiKey_Z))
+            gb->press_button(Button::B);
+        if (ImGui::IsKeyPressed(ImGuiKey_X))
+            gb->press_button(Button::A);
+        if (ImGui::IsKeyPressed(ImGuiKey_Enter))
+            gb->press_button(Button::Start);
+        if (ImGui::IsKeyPressed(ImGuiKey_Backspace))
+            gb->press_button(Button::Select);
 
-        if (ImGui::IsKeyReleased(ImGuiKey_RightArrow)) gb->release_button(Button::Right);
-        if (ImGui::IsKeyReleased(ImGuiKey_LeftArrow)) gb->release_button(Button::Left);
-        if (ImGui::IsKeyReleased(ImGuiKey_UpArrow)) gb->release_button(Button::Up);
-        if (ImGui::IsKeyReleased(ImGuiKey_DownArrow)) gb->release_button(Button::Down);
-        if (ImGui::IsKeyReleased(ImGuiKey_Z)) gb->release_button(Button::B);
-        if (ImGui::IsKeyReleased(ImGuiKey_X)) gb->release_button(Button::A);
-        if (ImGui::IsKeyReleased(ImGuiKey_Enter)) gb->release_button(Button::Start);
-        if (ImGui::IsKeyReleased(ImGuiKey_Backspace)) gb->release_button(Button::Select);
+        if (ImGui::IsKeyReleased(ImGuiKey_RightArrow))
+            gb->release_button(Button::Right);
+        if (ImGui::IsKeyReleased(ImGuiKey_LeftArrow))
+            gb->release_button(Button::Left);
+        if (ImGui::IsKeyReleased(ImGuiKey_UpArrow))
+            gb->release_button(Button::Up);
+        if (ImGui::IsKeyReleased(ImGuiKey_DownArrow))
+            gb->release_button(Button::Down);
+        if (ImGui::IsKeyReleased(ImGuiKey_Z))
+            gb->release_button(Button::B);
+        if (ImGui::IsKeyReleased(ImGuiKey_X))
+            gb->release_button(Button::A);
+        if (ImGui::IsKeyReleased(ImGuiKey_Enter))
+            gb->release_button(Button::Start);
+        if (ImGui::IsKeyReleased(ImGuiKey_Backspace))
+            gb->release_button(Button::Select);
 
         frame_start = std::chrono::steady_clock::now();
         while (!gb->frame_ready()) {
@@ -298,6 +346,7 @@ int main(int argc, char* argv[])
         draw_viewport();
         draw_background();
         draw_tile_data();
+        draw_cpu();
         draw_memory();
         draw_vram();
         draw_oam_ram();
