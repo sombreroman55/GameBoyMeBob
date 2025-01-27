@@ -68,7 +68,7 @@ add_executable(${GBMB_TARGET}
   ${GBMB_SRCS}
 
   # Main ile
-  ${BASE_DIR}/main_sdl.cc
+  ${BASE_DIR}/main.cc
 )
 
 target_include_directories(${GBMB_TARGET} PRIVATE

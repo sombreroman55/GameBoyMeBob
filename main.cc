@@ -42,6 +42,14 @@ void draw_viewport(void)
     static bool show_viewport = true;
     static int scale = 1;
     static GLuint image_texture = 0;
+    if (image_texture == 0) {
+        glGenTextures(1, &image_texture);
+        glBindTexture(GL_TEXTURE_2D, image_texture);
+
+        // Setup filtering parameters for display
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    }
     if (show_viewport) {
         // map values to colors
         int scaled_width = SCREEN_WIDTH * scale;
@@ -55,17 +63,6 @@ void draw_viewport(void)
 
         // render colors to texture
         // Create a OpenGL texture identifier
-        GLuint image_texture;
-        if (image_texture == 0) {
-            glGenTextures(1, &image_texture);
-        }
-        glBindTexture(GL_TEXTURE_2D, image_texture);
-
-        // Setup filtering parameters for display
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        // Upload pixels into texture
         glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA, scaled_width, scaled_height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pixels);
 
@@ -75,19 +72,7 @@ void draw_viewport(void)
             title = "Viewport";
         }
         ImGui::Begin(title, &show_viewport);
-        if (ImGui::SliderInt("Scale Factor", &scale, 1, 4)) {
-            glDeleteTextures(1, &image_texture);
-            glGenTextures(1, &image_texture);
-            glBindTexture(GL_TEXTURE_2D, image_texture);
-
-            // Setup filtering parameters for display
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-            // Upload pixels into texture
-            glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA, scaled_width, scaled_height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pixels);
-        }
+        ImGui::SliderInt("Scale Factor", &scale, 1, 4);
         ImGui::Image((ImTextureID)(intptr_t)image_texture, ImVec2(scaled_width, scaled_height));
         ImGui::End();
     }
