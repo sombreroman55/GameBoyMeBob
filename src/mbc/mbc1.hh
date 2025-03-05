@@ -23,10 +23,12 @@ namespace mbc1_read_map {
 class Mbc1 : public MbcInterface {
 private:
     u8 rom_bank = 1;
-    u8 high_bank = 1;
     u8 ram_bank = 0;
     u8 mode = 0;
     bool ram_enabled = false;
+    bool alternate_wiring = false;
+    u8 get_adjusted_bank(u8 bank);
+    bool advanced_banking_enabled(void);
 
 public:
     Mbc1(Cartridge* c);
