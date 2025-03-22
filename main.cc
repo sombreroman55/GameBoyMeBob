@@ -40,7 +40,7 @@ void draw_viewport(void)
     // Need to get frame no matter what to reset frame ready flag
     u8* frame = gb->get_frame();
     static bool show_viewport = true;
-    static int scale = 1;
+    static int scale = 4;
     static GLuint image_texture = 0;
     if (image_texture == 0) {
         glGenTextures(1, &image_texture);
@@ -52,19 +52,19 @@ void draw_viewport(void)
     }
     if (show_viewport) {
         // map values to colors
-        int scaled_width = SCREEN_WIDTH * scale;
-        int scaled_height = SCREEN_HEIGHT * scale;
-        u32 pixels[scaled_height * scaled_width];
-        for (int i = 0; i < scaled_height; i++) {
-            for (int j = 0; j < scaled_width; j++) {
-                pixels[i * scaled_width + j] = colors[frame[(i/scale) * SCREEN_WIDTH + (j/scale)]];
+        u32 pixels[SCREEN_HEIGHT * SCREEN_WIDTH];
+        for (int i = 0; i < SCREEN_HEIGHT; i++) {
+            for (int j = 0; j < SCREEN_WIDTH; j++) {
+                pixels[i * SCREEN_WIDTH + j] = colors[frame[i * SCREEN_WIDTH + j]];
             }
         }
 
         // render colors to texture
         // Create a OpenGL texture identifier
         glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA, scaled_width, scaled_height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pixels);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_BGRA, GL_UNSIGNED_BYTE, pixels);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
         // render texture to window
         const char* title = cart->header.title.c_str();
@@ -73,7 +73,7 @@ void draw_viewport(void)
         }
         ImGui::Begin(title, &show_viewport);
         ImGui::SliderInt("Scale Factor", &scale, 1, 4);
-        ImGui::Image((ImTextureID)(intptr_t)image_texture, ImVec2(scaled_width, scaled_height));
+        ImGui::Image((ImTextureID)(intptr_t)image_texture, ImVec2(SCREEN_WIDTH * scale, SCREEN_HEIGHT * scale));
         ImGui::End();
     }
 }

@@ -16,8 +16,8 @@ u8 Mbc1::get_adjusted_bank(u8 bank)
         bank |= (ram_bank << 5);
     }
 
-    uint8_t numBitsRequired = static_cast<uint8_t>(std::log2(cart->header.rom_size / 0x4000));
-    uint8_t bitMask = static_cast<uint8_t>(std::pow(2, numBitsRequired) - 1);
+    uint8_t numBits = static_cast<uint8_t>(std::log2(cart->header.rom_size / 0x4000));
+    uint8_t bitMask = (1 << numBits) - 1;
     return bank &= bitMask;
 }
 
