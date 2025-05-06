@@ -17,7 +17,7 @@ find_package(spdlog REQUIRED)
 
 set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL REQUIRED)
-find_package(SDL2 REQUIRED)
+find_package(SDL3 REQUIRED)
 
 if (CMAKE_SYSTEM_NAME STREQUAL Linux)
   find_package(X11 REQUIRED)
@@ -36,7 +36,7 @@ set(IMGUI_SRCS
   ${BASE_DIR}/third-party/imgui/imgui_widgets.cpp
 
   # Imgui backend files
-  ${BASE_DIR}/third-party/imgui/backends/imgui_impl_sdl2.cpp
+  ${BASE_DIR}/third-party/imgui/backends/imgui_impl_sdl3.cpp
   ${BASE_DIR}/third-party/imgui/backends/imgui_impl_opengl3.cpp
 )
 
@@ -77,11 +77,11 @@ target_include_directories(${GBMB_TARGET} PRIVATE
   ${BASE_DIR}/third-party/imgui/backends
   ${BASE_DIR}/third-party/imgui_club/imgui_memory_editor
   ${OPENGL_INCLUDE_DIRS}
-  ${SDL2_INCLUDE_DIRS}
+  ${SDL3_INCLUDE_DIRS}
 )
 
 target_link_libraries(${GBMB_TARGET}
-  ${SDL2_LIBRARIES}
+  ${SDL3_LIBRARIES}
   ${OPENGL_LIBRARIES}
   spdlog::spdlog_header_only
   -lzip
