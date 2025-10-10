@@ -5,8 +5,8 @@ project("GameBoyMeBob")
 set(GBMB_TARGET "GameBoyMeBob")
 set(TEST_TARGET "GbmbTest")
 
-# GoogleTest requires at least C++14
-set(CMAKE_CXX_STANDARD 14)
+# GoogleTest requires at least C++17
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -ggdb")
@@ -108,6 +108,7 @@ target_include_directories(${TEST_TARGET} PRIVATE
 target_link_libraries(${TEST_TARGET}
   spdlog::spdlog_header_only
   GTest::gtest_main
+  -lzip
 )
 
 gtest_discover_tests(${TEST_TARGET})

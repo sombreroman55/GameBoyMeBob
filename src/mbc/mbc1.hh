@@ -27,8 +27,7 @@ private:
     u8 mode = 0;
     bool ram_enabled = false;
     bool alternate_wiring = false;
-    u8 get_adjusted_bank(u8 bank);
-    bool advanced_banking_enabled(void);
+    u8 get_adjusted_rom_bank(u8 bank);
 
 public:
     Mbc1(Cartridge* c);

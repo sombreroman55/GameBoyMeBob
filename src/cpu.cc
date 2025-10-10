@@ -24,7 +24,6 @@ u32 Cpu::handle_interrupt(u8 i)
     static const u16 interrupt_vector[5] = { 0x0040, 0x0048, 0x0050, 0x0058, 0x0060 };
     Interrupt intr = static_cast<Interrupt>(i);
     ime = false;
-    halted = false;
     interrupts->clear_interrupt(intr);
 
     // Call interrupt handler
@@ -37,10 +36,15 @@ u32 Cpu::handle_interrupt(u8 i)
 
 u32 Cpu::step(void)
 {
+    static bool printed = false;
     u32 cycles_consumed = 1;
-    // if (stopped) {
-    // return cycles_consumed;
-    // }
+    if (stopped) {
+        if (!printed) {
+            spdlog::warn("CPU is technically stopped...");
+            printed = true;
+        }
+        // return cycles_consumed;
+    }
     // TBD: Do we want to "implement" stopping?
 
     // Check for interrupts
@@ -172,7 +176,7 @@ u32 Cpu::execute(u8 opcode)
         break;
 
     case 0x10: // stop
-        // stopped = true; // TBD: Do we want to "implement" stopping
+        stopped = true; // TBD: Do we want to "implement" stopping
         break;
 
     case 0x11: // ld de, u16
@@ -613,11 +617,10 @@ u32 Cpu::execute(u8 opcode)
 
     case 0x76: // halt
         if ((interrupts->get_flagged_interrupts() & interrupts->get_enabled_interrupts()) != 0) {
+            halted = false;
             if (ime) {
-                halted = false;
                 reg->pc--;
             } else {
-                halted = false;
                 halt_bug = true;
             }
         } else {
@@ -1072,7 +1075,7 @@ u32 Cpu::execute(u8 opcode)
 
     case 0xD9: // reti
         reg->pc = mem->pop_stack(&reg->sp);
-        ime = true;
+        pending_ime = true;
         break;
 
     case 0xDA: // jp c, u16
@@ -1232,9 +1235,7 @@ u32 Cpu::execute(u8 opcode)
         break;
 
     case 0xFB: // ei
-        if (!ime && !pending_ime) {
-            pending_ime = true;
-        }
+        pending_ime = true;
         break;
 
     case 0xFC: // should crash gb

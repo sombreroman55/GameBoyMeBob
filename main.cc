@@ -26,19 +26,24 @@ using namespace gameboymebob;
 Cartridge* cart = nullptr;
 GameBoy* gb = nullptr;
 
-//                        #9BBC0F,    #8BAC0F,    #306230,    #0F380F,    #11DDAA
-uint32_t colors[5] = { 0xFF9BBC0F, 0xFF8BAC0F, 0xFF306230, 0xFF0F380F, 0xFF11DDAA };
+uint32_t colors[2][5] = {
+//       #9BBC0F,    #8BAC0F,    #306230,    #0F380F,    #11DDAA
+    { 0xFF9BBC0F, 0xFF8BAC0F, 0xFF306230, 0xFF0F380F, 0xFF11DDAA },
+//       #B3CDE0,    #6497B1,    #005B96,    #03396C,    #011F4B
+    { 0xFFB3CDE0, 0xFF6497B1, 0xFF005B96, 0xFF03396C, 0xFF011F4B }
+};
 
 constexpr int FRAMERATE_MS = 1000 / 60;
 constexpr int SCREEN_HEIGHT = 144;
 constexpr int SCREEN_WIDTH = 160;
+static int scale = 4;
+static int palette = 0;
 
 void draw_viewport(void)
 {
     // Need to get frame no matter what to reset frame ready flag
     u8* frame = gb->get_frame();
     static bool show_viewport = true;
-    static int scale = 4;
     static GLuint image_texture = 0;
     if (image_texture == 0) {
         glGenTextures(1, &image_texture);
@@ -53,7 +58,7 @@ void draw_viewport(void)
         u32 pixels[SCREEN_HEIGHT * SCREEN_WIDTH];
         for (int i = 0; i < SCREEN_HEIGHT; i++) {
             for (int j = 0; j < SCREEN_WIDTH; j++) {
-                pixels[i * SCREEN_WIDTH + j] = colors[frame[i * SCREEN_WIDTH + j]];
+                pixels[i * SCREEN_WIDTH + j] = colors[palette][frame[i * SCREEN_WIDTH + j]];
             }
         }
 
@@ -70,7 +75,6 @@ void draw_viewport(void)
             title = "Viewport";
         }
         ImGui::Begin(title, &show_viewport);
-        ImGui::SliderInt("Scale Factor", &scale, 1, 4);
         ImGui::Image((ImTextureID)(intptr_t)image_texture, ImVec2(SCREEN_WIDTH * scale, SCREEN_HEIGHT * scale));
         ImGui::End();
     }
@@ -333,6 +337,9 @@ int main(int argc, char* argv[])
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplSDL3_NewFrame();
         ImGui::NewFrame();
+        ImGui::SliderInt("Scale Factor", &scale, 1, 4);
+        ImGui::RadioButton("Original", &palette, 0);
+        ImGui::RadioButton("Blue", &palette, 1);
 
         draw_viewport();
         draw_background();

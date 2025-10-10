@@ -261,15 +261,15 @@ const std::unordered_map<u8, std::string> cartridge_types = {
 };
 
 const std::array<int, 9> rom_sizes = {
-    0x8000,
-    0x10000,
-    0x20000,
-    0x40000,
-    0x80000,
-    0x100000,
-    0x200000,
-    0x400000,
-    0x800000,
+    0x4000 * 2,
+    0x4000 * 4,
+    0x4000 * 8,
+    0x4000 * 16,
+    0x4000 * 32,
+    0x4000 * 64,
+    0x4000 * 128,
+    0x4000 * 256,
+    0x4000 * 512,
 };
 
 const std::array<int, 6> ram_sizes = {

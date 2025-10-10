@@ -43,8 +43,10 @@ Cartridge::Cartridge(std::string rom_file)
             }
 
             if (header.cart_type == "ROM ONLY") {
+                spdlog::info("Using MBC0");
                 bank_controller = new Mbc0(this);
             } else if (header.cart_type.find("MBC1") != std::string::npos) {
+                spdlog::info("Using MBC1");
                 bank_controller = new Mbc1(this);
             }
         }
@@ -71,9 +73,15 @@ Cartridge::Cartridge(std::string rom_file)
         }
 
         if (header.cart_type == "ROM ONLY") {
+            spdlog::info("Using MBC0");
             bank_controller = new Mbc0(this);
         } else if (header.cart_type.find("MBC1") != std::string::npos) {
+            spdlog::info("Using MBC1");
             bank_controller = new Mbc1(this);
+        } else {
+            // Assume Mbc0 in unknown case, though will probably crash
+            spdlog::warn("We failed to parse the cart type properly, Using MBC0");
+            bank_controller = new Mbc0(this);
         }
     }
 }

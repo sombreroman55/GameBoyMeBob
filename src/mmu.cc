@@ -134,11 +134,6 @@ u8 Mmu::read_byte(u16 addr)
     return memory[addr];
 }
 
-u16 Mmu::read_word(u16 addr)
-{
-    return (read_byte(addr + 1) << 8) | read_byte(addr);
-}
-
 void Mmu::write_byte(u16 addr, u8 byte)
 {
     if (utility::in_range(addr, memory_map::rom_bank0)) {
@@ -189,6 +184,11 @@ void Mmu::write_byte(u16 addr, u8 byte)
     }
 
     memory[addr] = byte;
+}
+
+u16 Mmu::read_word(u16 addr)
+{
+    return (read_byte(addr + 1) << 8) | read_byte(addr);
 }
 
 void Mmu::write_word(u16 addr, u16 word)
